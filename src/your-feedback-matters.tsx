@@ -3,7 +3,8 @@ import { toPng } from 'html-to-image';
 import './your-feedback-matters.css';
 import { FeedbackForm } from './feedback-form';
 import { CrumpleScene } from './scene/crumple-scene';
-import { feedbackReducer, initialState } from './core/feedback-machine';
+import { createInitialState, feedbackReducer } from './core/feedback-machine';
+import { DEFAULT_FIELDS, type FieldConfig } from './core/fields';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
 import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
 import { includeInSnapshot } from './core/snapshot-filter';
@@ -24,16 +25,34 @@ export interface YourFeedbackMattersProps {
    * (prefers-reduced-motion + WebGL availability).
    */
   mode?: AnimationMode;
+  /**
+   * The form fields to collect, in order. Defaults to a Name text field and a
+   * Comment textarea. Like {@link mode}, this is read once at mount — changing
+   * it afterwards has no effect.
+   */
+  fields?: FieldConfig[];
 }
 
-export function YourFeedbackMatters({ mode }: YourFeedbackMattersProps = {}) {
+export function YourFeedbackMatters({
+  mode,
+  fields,
+}: YourFeedbackMattersProps = {}) {
   // Resolved once per mount so a mid-session change to the media query or
   // WebGL support doesn't yank the user between rendering strategies
   // mid-animation.
   const [resolvedMode] = useState<AnimationMode>(
     () => mode ?? detectAnimationMode(),
   );
-  const [state, dispatch] = useReducer(feedbackReducer, initialState);
+  // Read once at mount, like `mode`: the initial reducer state derives its
+  // field keys and required set from this configuration.
+  const [fieldConfigs] = useState<readonly FieldConfig[]>(
+    () => fields ?? DEFAULT_FIELDS,
+  );
+  const [state, dispatch] = useReducer(
+    feedbackReducer,
+    fieldConfigs,
+    createInitialState,
+  );
   const formRef = useRef<HTMLFormElement>(null);
   const [formRect, setFormRect] = useState<DOMRect | null>(null);
   // True while the 3D scene has a fished-out note in the lightbox. The DOM form
@@ -116,7 +135,8 @@ export function YourFeedbackMatters({ mode }: YourFeedbackMattersProps = {}) {
   const formElement = (
     <FeedbackForm
       ref={formRef}
-      fields={state.fields}
+      fieldConfigs={fieldConfigs}
+      values={state.fields}
       errorMessage={state.errorMessage}
       shaking={state.phase === 'error'}
       onFieldChange={(field, value) =>

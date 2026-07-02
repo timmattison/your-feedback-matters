@@ -12,3 +12,4 @@ export {
 
 export type { AnimationMode } from './core/animation-mode';
 export type { FormFields } from './core/feedback-machine';
+export type { FieldConfig, FieldType } from './core/fields';

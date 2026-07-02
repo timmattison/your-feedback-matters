@@ -1,13 +1,19 @@
 import { forwardRef } from 'react';
 import './feedback-form.css';
 import type { FormFields } from './core/feedback-machine';
+import type { FieldConfig } from './core/fields';
 import { CANCEL_BUTTON_LABEL, TOSS_BUTTON_LABEL } from './core/copy';
 
+const DEFAULT_TEXTAREA_ROWS = 5;
+
 export interface FeedbackFormProps {
-  fields: FormFields;
+  /** What fields to render, in order. */
+  fieldConfigs: readonly FieldConfig[];
+  /** Current value for each field, keyed by {@link FieldConfig.name}. */
+  values: FormFields;
   errorMessage: string | null;
   shaking: boolean;
-  onFieldChange(field: keyof FormFields, value: string): void;
+  onFieldChange(field: string, value: string): void;
   onCancel(): void;
   onToss(): void;
   onShakeEnd(): void;
@@ -18,7 +24,8 @@ export interface FeedbackFormProps {
 export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
   function FeedbackForm(
     {
-      fields,
+      fieldConfigs,
+      values,
       errorMessage,
       shaking,
       onFieldChange,
@@ -39,22 +46,24 @@ export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
         onSubmit={(e) => e.preventDefault()}
       >
         <h1>Your Feedback Matters</h1>
-        <label>
-          Name
-          <input
-            type="text"
-            value={fields.name}
-            onChange={(e) => onFieldChange('name', e.target.value)}
-          />
-        </label>
-        <label>
-          Comment
-          <textarea
-            rows={5}
-            value={fields.comment}
-            onChange={(e) => onFieldChange('comment', e.target.value)}
-          />
-        </label>
+        {fieldConfigs.map((config) => (
+          <label key={config.name}>
+            {config.label}
+            {config.type === 'textarea' ? (
+              <textarea
+                rows={config.rows ?? DEFAULT_TEXTAREA_ROWS}
+                value={values[config.name] ?? ''}
+                onChange={(e) => onFieldChange(config.name, e.target.value)}
+              />
+            ) : (
+              <input
+                type="text"
+                value={values[config.name] ?? ''}
+                onChange={(e) => onFieldChange(config.name, e.target.value)}
+              />
+            )}
+          </label>
+        ))}
         {errorMessage !== null && (
           <p role="alert" className="blank-scolding">
             {errorMessage}
