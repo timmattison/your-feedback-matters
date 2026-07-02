@@ -1,4 +1,5 @@
 import {
+  createInitialState,
   feedbackReducer,
   initialState,
   isBlank,
@@ -92,6 +93,62 @@ test('SETTLE_FINISHED returns to the closed landing, not a fresh open form', () 
   expect(next.phase).toBe('closed');
   expect(next.fields).toEqual({ name: '', comment: '' });
   expect(next.snapshotUrl).toBeNull();
+});
+
+test('createInitialState seeds empty values and the required set from field configs', () => {
+  const custom = createInitialState([
+    { name: 'email', label: 'Email' },
+    { name: 'msg', label: 'Message', type: 'textarea', required: false },
+  ]);
+  expect(custom.phase).toBe('closed');
+  expect(custom.fields).toEqual({ email: '', msg: '' });
+  // Only fields whose `required` is not explicitly false are required.
+  expect(custom.requiredFields).toEqual(['email']);
+  expect(custom.errorMessage).toBeNull();
+  expect(custom.tossSeed).toBe(0);
+  expect(custom.snapshotUrl).toBeNull();
+});
+
+test('isBlank only blocks on blank REQUIRED fields, ignoring optional ones', () => {
+  const values = { email: 'a@b.com', msg: '' };
+  // msg blank is fine while it is not required...
+  expect(isBlank(values, ['email'])).toBe(false);
+  // ...but blocks once it is required.
+  expect(isBlank(values, ['email', 'msg'])).toBe(true);
+  // A blank required field always blocks.
+  expect(isBlank({ email: '   ', msg: 'hi' }, ['email'])).toBe(true);
+});
+
+test('CANCEL preserves a custom field set, clearing values but keeping the keys', () => {
+  const custom = createInitialState([
+    { name: 'email', label: 'Email' },
+    { name: 'msg', label: 'Message', type: 'textarea' },
+  ]);
+  const filledCustom: FeedbackState = {
+    ...custom,
+    phase: 'idle',
+    fields: { email: 'a@b.com', msg: 'hello' },
+  };
+  const next = feedbackReducer(filledCustom, { type: 'CANCEL' });
+  expect(next.phase).toBe('closed');
+  expect(next.fields).toEqual({ email: '', msg: '' });
+  expect(next.requiredFields).toEqual(['email', 'msg']);
+});
+
+test('SETTLE_FINISHED preserves a custom field set, clearing values but keeping the keys', () => {
+  const custom = createInitialState([
+    { name: 'email', label: 'Email' },
+    { name: 'msg', label: 'Message', type: 'textarea' },
+  ]);
+  const settlingCustom: FeedbackState = {
+    ...custom,
+    phase: 'settling',
+    fields: { email: 'a@b.com', msg: 'hello' },
+  };
+  const next = feedbackReducer(settlingCustom, { type: 'SETTLE_FINISHED' });
+  expect(next.phase).toBe('closed');
+  expect(next.fields).toEqual({ email: '', msg: '' });
+  expect(next.requiredFields).toEqual(['email', 'msg']);
 });
 
 test('events in the wrong phase are ignored', () => {
