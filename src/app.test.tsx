@@ -1,4 +1,10 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toPng } from 'html-to-image';
 import { App } from './app';
@@ -67,7 +73,7 @@ test('editing a field clears the scolding', async () => {
 
 test('a filled toss captures the form and hides it for the crumple', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<App mode="full3d" />);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -82,7 +88,7 @@ test('a filled toss captures the form and hides it for the crumple', async () =>
 
 test('after the toss settles, a fresh empty form is ready for another round', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<App mode="full3d" />);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'straight to the bin');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -99,7 +105,7 @@ test('after the toss settles, a fresh empty form is ready for another round', as
 test('a failed snapshot capture still advances instead of sticking in capturing', async () => {
   const user = userEvent.setup();
   vi.mocked(toPng).mockRejectedValueOnce(new Error('capture failed'));
-  render(<App />);
+  render(<App mode="full3d" />);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -110,4 +116,37 @@ test('a failed snapshot capture still advances instead of sticking in capturing'
   expect(
     screen.queryByRole('button', { name: REOPEN_BUTTON_LABEL }),
   ).toBeNull();
+});
+
+test('reduced-motion (instant) mode tosses without any 3D scene and resets quickly', async () => {
+  sceneProps.current = null;
+  const user = userEvent.setup();
+  render(<App mode="instant" />);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
+  await user.type(screen.getByLabelText('Comment'), 'no motion please');
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue(''));
+  expect(screen.getByLabelText('Comment')).toHaveValue('');
+  // the scene component was never mounted, so it never touched sceneProps
+  expect(sceneProps.current).toBeNull();
+});
+
+test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on animationend', async () => {
+  sceneProps.current = null;
+  const user = userEvent.setup();
+  render(<App mode="css" />);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
+  await user.type(screen.getByLabelText('Comment'), 'no webgl here');
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+
+  const form = await screen.findByRole('form', { name: 'Feedback form' });
+  const wrapper = form.parentElement;
+  await waitFor(() => expect(wrapper).toHaveClass('css-toss'));
+  expect(sceneProps.current).toBeNull();
+
+  act(() => {
+    fireEvent.animationEnd(wrapper as HTMLElement);
+  });
+  expect(screen.getByLabelText('Name')).toHaveValue('');
+  expect(screen.getByLabelText('Comment')).toHaveValue('');
 });

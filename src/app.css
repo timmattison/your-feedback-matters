@@ -17,3 +17,30 @@
 .powered-by a:hover {
   text-decoration: underline;
 }
+
+/* css fallback (no WebGL): the crumpling paper physics is faked with a
+   single CSS animation on the form's wrapper — shrink, spin, and fling
+   toward the corner where the wastebasket would be. */
+.css-toss {
+  animation: css-toss 1.2s ease-in forwards;
+}
+@keyframes css-toss {
+  30% {
+    transform: scale(0.5) rotate(20deg);
+  }
+  100% {
+    transform: scale(0.05) rotate(540deg) translate(60vw, 40vh);
+    opacity: 0;
+  }
+}
+
+/* instant fallback (prefers-reduced-motion): no transforms, just a brief
+   fade so the toss doesn't feel like the form vanished without warning. */
+.instant-fade {
+  animation: instant-fade 0.2s ease-in forwards;
+}
+@keyframes instant-fade {
+  to {
+    opacity: 0;
+  }
+}
