@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   basketRadiusAtHeightFraction,
+  basketWallElement,
   basketWallSlant,
 } from './basket-geometry';
 import {
@@ -64,5 +65,49 @@ describe('basketWallSlant', () => {
     expect(tilt).toBeGreaterThan(0);
     // rise = height, run = horizontal taper → tan(tilt) = run / height.
     expect(Math.tan(tilt)).toBeCloseTo(run / BASKET_HEIGHT, 6);
+  });
+});
+
+describe('basketWallElement', () => {
+  it('spans the whole wall when it runs floor to mouth', () => {
+    const full = basketWallElement(0, 1);
+    expect(full.centerHeight).toBeCloseTo(BASKET_HEIGHT / 2, 6);
+    expect(full.length).toBeCloseTo(basketWallSlant().length, 6);
+  });
+
+  it('is shorter when it starts above the floor (the fix for ribs poking through)', () => {
+    // A rib that begins at the foot ring instead of the floor must be shorter
+    // than the full-height physics wall, so it stops at the ring.
+    const lifted = basketWallElement(0.05, 1);
+    expect(lifted.length).toBeLessThan(basketWallSlant().length);
+  });
+
+  it('takes a length proportional to the fraction of height it covers', () => {
+    const half = basketWallElement(0, 0.5);
+    expect(half.length).toBeCloseTo(basketWallSlant().length / 2, 6);
+    const upperHalf = basketWallElement(0.5, 1);
+    expect(upperHalf.length).toBeCloseTo(basketWallSlant().length / 2, 6);
+  });
+
+  it('centres the element at the mid-height of its span', () => {
+    expect(basketWallElement(0, 0.5).centerHeight).toBeCloseTo(
+      BASKET_HEIGHT * 0.25,
+      6,
+    );
+    expect(basketWallElement(0.6, 0.8).centerHeight).toBeCloseTo(
+      BASKET_HEIGHT * 0.7,
+      6,
+    );
+  });
+
+  it('keeps a lifted element entirely above its start height', () => {
+    // bottom endpoint = centre − half the vertical extent = f0 · height,
+    // so a rib starting at f0 never dips below f0 of the height.
+    const f0 = 0.04;
+    const el = basketWallElement(f0, 1);
+    const verticalExtent = (1 - f0) * BASKET_HEIGHT;
+    const bottom = el.centerHeight - verticalExtent / 2;
+    expect(bottom).toBeCloseTo(f0 * BASKET_HEIGHT, 6);
+    expect(bottom).toBeGreaterThan(0);
   });
 });

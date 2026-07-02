@@ -35,3 +35,22 @@ export function basketWallSlant(): WallSlant {
     tilt: Math.atan2(run, BASKET_HEIGHT),
   };
 }
+
+export interface WallElement {
+  /** World-space height (Y) of the element's centre. */
+  readonly centerHeight: number;
+  /** Length of the element measured along the slanted wall. */
+  readonly length: number;
+}
+
+/**
+ * A straight wall element spanning height fractions `f0`..`f1` of the taper.
+ * Both endpoints lie on the same slanted wall line and the taper is linear, so
+ * the element's length is that fraction of the full floor→mouth slant and its
+ * centre sits at the mid-height of the span. The visible ribs start at the foot
+ * ring (`f0 > 0`) so they don't poke through the bottom, while the physics wall
+ * spans the full height (`f0 = 0`).
+ */
+export function basketWallElement(_f0: number, _f1: number): WallElement {
+  throw new Error('not implemented');
+}
