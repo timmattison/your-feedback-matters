@@ -219,9 +219,14 @@ function SceneContents(props: SceneContentsProps) {
         CAMERA,
       ),
       balls: pile
-        .filter((entry) => entry.restPosition !== null)
+        .filter(
+          (
+            entry,
+          ): entry is PileEntry & { restPosition: [number, number, number] } =>
+            entry.restPosition !== null,
+        )
         .map((entry) => {
-          const rest = entry.restPosition as [number, number, number];
+          const rest = entry.restPosition;
           const center = worldPointToScreen(rest, viewport, CAMERA);
           return {
             id: entry.id,
