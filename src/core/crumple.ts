@@ -79,7 +79,15 @@ export function createCrumpleField(
     const contract = 1 - 0.35 * smoothstep(0, 0.6, t);
     const folded: [number, number, number] = [x0 * contract, y0 * contract, z];
 
-    // 3. attraction to a lumpy ball
+    // 3. attraction to a lumpy ball. We *drape* the sheet over the ball rather
+    // than shrink-wrapping it with a globe projection. A globe map sends v = 1
+    // (the sheet's top edge) to phi = π (the sphere's south pole), so the sheet
+    // sweeps through the origin and turns inside-out — a point-reflection that
+    // reads as a negative scale about the center. Instead, elevation tracks v
+    // and azimuth tracks u, so the map is an orientation-preserving diffeo onto
+    // the ball: top stays up, bottom stays down, and the center (azim = elev = 0)
+    // faces the camera (+z). Its Jacobian ∂u×∂v points radially outward
+    // everywhere, so the textured front never flips to the inside.
     const theta = u * Math.PI * 2;
     const phi = v * Math.PI;
     const lump =
@@ -88,10 +96,13 @@ export function createCrumpleField(
         (0.6 * Math.sin(3 * theta + j1) * Math.sin(2 * phi + j2) +
           0.4 * Math.sin(5 * theta + j3));
     const r = ballRadius * lump;
+    const azimuth = (u - 0.5) * Math.PI * 2; // side edges meet at the back seam
+    const elevation = (v - 0.5) * Math.PI; // v=0 → south, v=1 → north
+    const cosEl = Math.cos(elevation);
     const target: [number, number, number] = [
-      r * Math.sin(phi) * Math.cos(theta),
-      r * Math.cos(phi),
-      r * Math.sin(phi) * Math.sin(theta),
+      r * cosEl * Math.sin(azimuth),
+      r * Math.sin(elevation),
+      r * cosEl * Math.cos(azimuth),
     ];
     const k = Math.pow(smoothstep(0.3, 1, t), 1.4);
     return [
