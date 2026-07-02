@@ -31,7 +31,6 @@ const CAMERA = { fovDeg: CAMERA_FOV_DEG, distance: CAMERA_DISTANCE };
 
 function SceneContents(props: CrumpleSceneProps) {
   const { size } = useThree();
-  const viewport = { width: size.width, height: size.height };
   const worldH = visibleWorldHeight(CAMERA);
   const worldW = worldH * (size.width / size.height);
 
@@ -51,8 +50,12 @@ function SceneContents(props: CrumpleSceneProps) {
     () =>
       props.formRect === null
         ? null
-        : domRectToWorld(props.formRect, viewport, CAMERA),
-    [props.formRect, viewport.width, viewport.height],
+        : domRectToWorld(
+            props.formRect,
+            { width: size.width, height: size.height },
+            CAMERA,
+          ),
+    [props.formRect, size.width, size.height],
   );
 
   const field = useMemo(
