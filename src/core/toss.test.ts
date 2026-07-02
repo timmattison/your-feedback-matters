@@ -15,9 +15,7 @@ function landingPoint(plan: ReturnType<typeof planToss>): Vec3 {
 }
 
 test('deterministic per seed', () => {
-  expect(planToss(42, from, basket, R)).toEqual(
-    planToss(42, from, basket, R),
-  );
+  expect(planToss(42, from, basket, R)).toEqual(planToss(42, from, basket, R));
 });
 
 test('a make lands at the basket mouth', () => {
