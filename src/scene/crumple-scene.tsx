@@ -82,8 +82,12 @@ function SceneContents(props: CrumpleSceneProps) {
 
   return (
     <>
-      <ambientLight intensity={0.9} />
+      <ambientLight intensity={0.6} />
+      {/* sky/ground gradient gives the round steel basket its shaded falloff */}
+      <hemisphereLight args={['#ffffff', '#3a3f47', 0.6]} />
       <directionalLight position={[4, 6, 8]} intensity={1.4} />
+      {/* soft fill from the opposite side so the shadowed wall isn't pure black */}
+      <directionalLight position={[-5, 2, -3]} intensity={0.35} />
       <Physics gravity={[0, GRAVITY_Y, 0]}>
         <Ground y={-worldH / 2 + 0.1} />
         <Wastebasket base={basketBase} />
