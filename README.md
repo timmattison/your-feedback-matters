@@ -68,6 +68,14 @@ WebGL2 context at runtime.
 ## Getting started
 
 ```bash
+./scripts/dev.ts   # install deps, pick a free port (portplz), start Vite, open browser
+```
+
+The dev script needs [`portplz`](https://crates.io/crates/portplz)
+(`cargo install portplz`) to pick a unique free port, so multiple projects'
+dev servers never collide. Or run the steps manually:
+
+```bash
 pnpm install
 pnpm dev       # local dev server
 pnpm test      # run the test suite (vitest run)
