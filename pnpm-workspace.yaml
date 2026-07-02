@@ -1,0 +1,6 @@
+# The repository root IS the publishable `your-feedback-matters` widget package.
+# The demo site (deployed to GitHub Pages) lives in apps/demo as a workspace
+# member so it can consume the widget's source directly while sharing a single
+# copy of react/three (multiple three copies break React Three Fiber).
+packages:
+  - 'apps/*'

@@ -1,0 +1,29 @@
+{
+  "name": "your-feedback-matters-demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Demo site for the your-feedback-matters widget, deployed to GitHub Pages.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "your-feedback-matters": "workspace:*",
+    "@react-three/cannon": "^6.6.0",
+    "@react-three/fiber": "^9.6.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "three": "^0.185.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.185.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}

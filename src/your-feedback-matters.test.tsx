@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toPng } from 'html-to-image';
-import { App } from './app';
+import { YourFeedbackMatters } from './your-feedback-matters';
 import type { CrumpleSceneProps } from './scene/crumple-scene';
 import {
   BLANK_FEEDBACK_MESSAGE,
@@ -24,8 +24,8 @@ vi.mock('html-to-image', () => ({
 
 // three/@react-three/fiber cannot render in jsdom; the scene is verified
 // visually (see task-8-brief Step 5), not in this suite. This mock captures
-// the props App passes down so tests can drive the state machine through
-// the scene's callbacks without a real WebGL context.
+// the props YourFeedbackMatters passes down so tests can drive the state
+// machine through the scene's callbacks without a real WebGL context.
 const sceneProps: { current: CrumpleSceneProps | null } = { current: null };
 vi.mock('./scene/crumple-scene', () => ({
   CrumpleScene: (props: CrumpleSceneProps) => {
@@ -42,7 +42,7 @@ async function openForm(user: ReturnType<typeof userEvent.setup>) {
 
 test('footer shows the Powered by badge linking to the repo (once opened)', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<YourFeedbackMatters />);
   await openForm(user);
   const link = screen.getByRole('link', { name: POWERED_BY_TEXT });
   expect(link).toHaveAttribute('href', REPO_URL);
@@ -50,7 +50,7 @@ test('footer shows the Powered by badge linking to the repo (once opened)', asyn
 
 test('the Powered by badge is hidden on the landing and appears once opened', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<YourFeedbackMatters />);
   expect(screen.queryByRole('link', { name: POWERED_BY_TEXT })).toBeNull();
   await openForm(user);
   expect(
@@ -59,7 +59,7 @@ test('the Powered by badge is hidden on the landing and appears once opened', as
 });
 
 test('the page lands on the "Got feedback?" button, not the form', () => {
-  render(<App />);
+  render(<YourFeedbackMatters />);
   expect(
     screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }),
   ).toBeInTheDocument();
@@ -68,7 +68,7 @@ test('the page lands on the "Got feedback?" button, not the form', () => {
 
 test('after a toss settles, it returns to the "Got feedback?" landing (empty on reopen)', async () => {
   const user = userEvent.setup();
-  render(<App mode="full3d" />);
+  render(<YourFeedbackMatters mode="full3d" />);
   await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'straight to the bin');
@@ -76,7 +76,7 @@ test('after a toss settles, it returns to the "Got feedback?" landing (empty on 
   await waitFor(() => expect(sceneProps.current?.phase).toBe('crumpling'));
   act(() => sceneProps.current?.onCrumpleFinished());
   act(() => sceneProps.current?.onBallRested());
-  // full3d leaves 'settling' via the 1200ms safety timer in app.tsx
+  // full3d leaves 'settling' via the 1200ms safety timer in the component
   await waitFor(
     () =>
       expect(
@@ -93,7 +93,7 @@ test('after a toss settles, it returns to the "Got feedback?" landing (empty on 
 
 test('the basket is slid out on the landing, slides in on open, and back out on cancel', async () => {
   const user = userEvent.setup();
-  render(<App mode="full3d" />);
+  render(<YourFeedbackMatters mode="full3d" />);
   // scene stays mounted so it can animate, but is told to hide on the landing
   expect(sceneProps.current?.visible).toBe(false);
   await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
@@ -104,7 +104,7 @@ test('the basket is slid out on the landing, slides in on open, and back out on 
 
 test('cancel closes the form immediately and clears the fields', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<YourFeedbackMatters />);
   await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
@@ -117,7 +117,7 @@ test('cancel closes the form immediately and clears the fields', async () => {
 
 test('blank toss shakes the form and shows the scolding in red', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<YourFeedbackMatters />);
   await openForm(user);
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   const alert = screen.getByRole('alert');
@@ -129,7 +129,7 @@ test('blank toss shakes the form and shows the scolding in red', async () => {
 
 test('editing a field clears the scolding', async () => {
   const user = userEvent.setup();
-  render(<App />);
+  render(<YourFeedbackMatters />);
   await openForm(user);
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   await user.type(screen.getByLabelText('Comment'), 'x');
@@ -138,7 +138,7 @@ test('editing a field clears the scolding', async () => {
 
 test('a filled toss captures the form and hides it for the crumple', async () => {
   const user = userEvent.setup();
-  render(<App mode="full3d" />);
+  render(<YourFeedbackMatters mode="full3d" />);
   await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
@@ -155,7 +155,7 @@ test('a filled toss captures the form and hides it for the crumple', async () =>
 test('a failed snapshot capture still advances instead of sticking in capturing', async () => {
   const user = userEvent.setup();
   vi.mocked(toPng).mockRejectedValueOnce(new Error('capture failed'));
-  render(<App mode="full3d" />);
+  render(<YourFeedbackMatters mode="full3d" />);
   await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
@@ -172,7 +172,7 @@ test('a failed snapshot capture still advances instead of sticking in capturing'
 test('reduced-motion (instant) mode tosses without any 3D scene and resets quickly', async () => {
   sceneProps.current = null;
   const user = userEvent.setup();
-  render(<App mode="instant" />);
+  render(<YourFeedbackMatters mode="instant" />);
   await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'no motion please');
@@ -194,7 +194,7 @@ test('reduced-motion (instant) mode tosses without any 3D scene and resets quick
 test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on animationend', async () => {
   sceneProps.current = null;
   const user = userEvent.setup();
-  render(<App mode="css" />);
+  render(<YourFeedbackMatters mode="css" />);
   await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'no webgl here');
@@ -221,7 +221,7 @@ test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on a
 
 test('the form goes inert while a note is inspected and is typeable again after dismiss', async () => {
   const user = userEvent.setup();
-  render(<App mode="full3d" />);
+  render(<YourFeedbackMatters mode="full3d" />);
   await openForm(user);
   // grab the ref BEFORE inert removes it from the a11y tree
   const form = screen.getByRole('form', { name: 'Feedback form' });
@@ -236,7 +236,7 @@ test('the form goes inert while a note is inspected and is typeable again after 
 
 test('css mode ignores animationend from other animations (e.g. a bubbled shake)', async () => {
   const user = userEvent.setup();
-  render(<App mode="css" />);
+  render(<YourFeedbackMatters mode="css" />);
   await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'no webgl here');

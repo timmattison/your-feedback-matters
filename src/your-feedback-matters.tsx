@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import './app.css';
+import './your-feedback-matters.css';
 import { FeedbackForm } from './feedback-form';
 import { CrumpleScene } from './scene/crumple-scene';
 import { feedbackReducer, initialState } from './core/feedback-machine';
@@ -10,12 +10,13 @@ import { includeInSnapshot } from './core/snapshot-filter';
 import { captureWithFallback } from './core/capture-with-fallback';
 import { CAPTURE_TIMEOUT_MS } from './core/constants';
 
-// Class name and @keyframes name (src/app.css) for the css-mode toss.
+// Class name and @keyframes name (src/your-feedback-matters.css) for the
+// css-mode toss.
 // The animationend handler keys on this exact animation name, so the class,
 // the keyframes, and the guard must all agree.
 const CSS_TOSS_ANIMATION = 'css-toss';
 
-export interface AppProps {
+export interface YourFeedbackMattersProps {
   /**
    * Forces the animation mode instead of auto-detecting it via
    * {@link detectAnimationMode}. Intended for tests; production callers
@@ -25,7 +26,7 @@ export interface AppProps {
   mode?: AnimationMode;
 }
 
-export function App({ mode }: AppProps = {}) {
+export function YourFeedbackMatters({ mode }: YourFeedbackMattersProps = {}) {
   // Resolved once per mount so a mid-session change to the media query or
   // WebGL support doesn't yank the user between rendering strategies
   // mid-animation.
