@@ -1,11 +1,34 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Physics } from '@react-three/cannon';
 import * as THREE from 'three';
 import './scene.css';
 import type { Phase } from '../core/feedback-machine';
 import { createCrumpleField } from '../core/crumple';
-import { domRectToWorld, visibleWorldHeight } from '../core/screen-to-world';
+import {
+  domRectToWorld,
+  visibleWorldHeight,
+  worldPointToScreen,
+  worldRadiusToScreen,
+} from '../core/screen-to-world';
+import {
+  inspectReducer,
+  initialInspectState,
+  type InspectPhase,
+} from '../core/inspect-machine';
+import {
+  pickBallAt,
+  basketScreenRect,
+  type ScreenBall,
+  type ScreenRect,
+} from '../core/pick-ball';
 import {
   BASKET_HEIGHT,
   BASKET_RADIUS,
@@ -14,9 +37,11 @@ import {
   GRAVITY_Y,
   PILE_FRICTION,
   PILE_RESTITUTION,
+  SCRIM_RENDER_ORDER,
 } from '../core/constants';
 import { joltDelayMs } from '../core/jolt';
 import { CrumplingPaper } from './crumpling-paper';
+import { InspectedNote } from './inspected-note';
 import { PaperBall } from './paper-ball';
 import { Wastebasket } from './wastebasket';
 import { Ground } from './ground';
@@ -65,7 +90,21 @@ interface PileEntry {
   restQuaternion: [number, number, number, number] | null;
 }
 
-function SceneContents(props: CrumpleSceneProps) {
+// Ready-to-use screen-space picking model, projected inside the Canvas (where
+// size/basketBase/pile live) and handed to the DOM hit-layer outside it.
+interface PickModel {
+  basketRect: ScreenRect;
+  balls: ScreenBall[];
+}
+
+interface SceneContentsProps extends CrumpleSceneProps {
+  inspectPhase: InspectPhase;
+  inspectNoteId: number | null;
+  onOpenDone(): void;
+  onPickModelChange(model: PickModel): void;
+}
+
+function SceneContents(props: SceneContentsProps) {
   const { size } = useThree();
   const worldH = visibleWorldHeight(CAMERA);
   const worldW = worldH * (size.width / size.height);
@@ -134,6 +173,39 @@ function SceneContents(props: CrumpleSceneProps) {
     return () => clearTimeout(timer);
   }, [props.visible]);
 
+  // Project the basket rect and every resting wad into screen space here, where
+  // size/basketBase/pile live, and hand the finished model up to the DOM
+  // hit-layer outside the Canvas — which can then be pure consume-and-dispatch.
+  const onPickModelChange = props.onPickModelChange;
+  const pickModel = useMemo<PickModel>(() => {
+    const viewport = { width: size.width, height: size.height };
+    return {
+      basketRect: basketScreenRect(
+        basketBase,
+        BASKET_HEIGHT,
+        BASKET_RADIUS,
+        viewport,
+        CAMERA,
+      ),
+      balls: pile
+        .filter((entry) => entry.restPosition !== null)
+        .map((entry) => {
+          const rest = entry.restPosition as [number, number, number];
+          const center = worldPointToScreen(rest, viewport, CAMERA);
+          return {
+            id: entry.id,
+            cx: center.x,
+            cy: center.y,
+            r: worldRadiusToScreen(entry.ballRadius, viewport, CAMERA),
+            depth: rest[2],
+          };
+        }),
+    };
+  }, [size.width, size.height, basketBase, pile]);
+  useEffect(() => {
+    onPickModelChange(pickModel);
+  }, [pickModel, onPickModelChange]);
+
   return (
     <>
       <ambientLight intensity={0.6} />
@@ -181,41 +253,89 @@ function SceneContents(props: CrumpleSceneProps) {
               }}
             />
           )}
-        {pile.map((entry) => (
-          <PaperBall
-            key={entry.id}
-            geometry={entry.geometry}
-            snapshotUrl={entry.snapshotUrl}
-            startPosition={entry.startPosition}
-            ballRadius={entry.ballRadius}
-            seed={entry.seed}
-            basketMouth={basketMouth}
-            basketBase={basketBase}
-            isActive={entry.id === activeId}
-            joltNonce={joltNonce}
-            onRested={props.onBallRested}
-            onFellOut={() => removeBall(entry.id)}
-            onRestPose={(pose) =>
-              setPile((current) =>
-                current.map((e) =>
-                  e.id === entry.id
-                    ? {
-                        ...e,
-                        restPosition: pose.position,
-                        restQuaternion: pose.quaternion,
-                      }
-                    : e,
-                ),
-              )
-            }
-          />
-        ))}
+        {pile.map((entry) => {
+          const inspected =
+            props.inspectPhase !== 'browsing' &&
+            entry.id === props.inspectNoteId;
+          // When a wad is swapped to InspectedNote its old PaperBall unmounts and
+          // disposes entry.geometry; that's fine for Phase 3 — nothing re-mounts
+          // it here. Phase 4's re-throw handles re-creating it.
+          return inspected ? (
+            <InspectedNote
+              key={entry.id}
+              entry={entry}
+              onOpenDone={props.onOpenDone}
+            />
+          ) : (
+            <PaperBall
+              key={entry.id}
+              geometry={entry.geometry}
+              snapshotUrl={entry.snapshotUrl}
+              startPosition={entry.startPosition}
+              ballRadius={entry.ballRadius}
+              seed={entry.seed}
+              basketMouth={basketMouth}
+              basketBase={basketBase}
+              isActive={entry.id === activeId}
+              joltNonce={joltNonce}
+              onRested={props.onBallRested}
+              onFellOut={() => removeBall(entry.id)}
+              onRestPose={(pose) =>
+                setPile((current) =>
+                  current.map((e) =>
+                    e.id === entry.id
+                      ? {
+                          ...e,
+                          restPosition: pose.position,
+                          restQuaternion: pose.quaternion,
+                        }
+                      : e,
+                  ),
+                )
+              }
+            />
+          );
+        })}
+        {/* The scrim: transparent + depthTest off, with a LOWER renderOrder than
+            the note, so in three's transparent pass it draws after the (default
+            renderOrder 0) pile but before the note — dimming basket/pile/form-
+            behind while the pulled note stays bright. */}
+        {props.inspectPhase !== 'browsing' && (
+          <mesh renderOrder={SCRIM_RENDER_ORDER} position={[0, 0, 0]}>
+            {/* Oversized so it covers the viewport at z = 0 with margin. */}
+            <planeGeometry args={[worldW * 1.5, worldH * 1.5]} />
+            <meshBasicMaterial
+              color="black"
+              transparent
+              opacity={0.6}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </mesh>
+        )}
       </Physics>
     </>
   );
 }
 
 export function CrumpleScene(props: CrumpleSceneProps) {
+  const [inspect, dispatchInspect] = useReducer(
+    inspectReducer,
+    initialInspectState,
+  );
+  const [pickModel, setPickModel] = useState<PickModel | null>(null);
+
+  // A resting wad is clickable only while the form is open (idle) and no note
+  // is currently pulled (browsing). The hit-layer is a DOM div scoped to the
+  // basket's screen rect, so the centered form stays fully typeable.
+  const armed = props.phase === 'idle' && inspect.phase === 'browsing';
+
+  // Tell the app whenever a note is being inspected, so it can `inert` the form.
+  const onInspectingChange = props.onInspectingChange;
+  useEffect(() => {
+    onInspectingChange(inspect.phase !== 'browsing');
+  }, [inspect.phase, onInspectingChange]);
+
   return (
     <div
       className={`scene-overlay${props.visible ? '' : ' scene-overlay--hidden'}`}
@@ -224,8 +344,33 @@ export function CrumpleScene(props: CrumpleSceneProps) {
         gl={{ alpha: true }}
         camera={{ fov: CAMERA_FOV_DEG, position: [0, 0, CAMERA_DISTANCE] }}
       >
-        <SceneContents {...props} />
+        <SceneContents
+          {...props}
+          inspectPhase={inspect.phase}
+          inspectNoteId={inspect.noteId}
+          onOpenDone={() => dispatchInspect({ type: 'OPEN_DONE' })}
+          onPickModelChange={(model) => setPickModel(model)}
+        />
       </Canvas>
+      {armed && pickModel !== null && (
+        <div
+          className="basket-hit-layer"
+          style={{
+            position: 'absolute',
+            left: pickModel.basketRect.left,
+            top: pickModel.basketRect.top,
+            width: pickModel.basketRect.width,
+            height: pickModel.basketRect.height,
+          }}
+          onClick={(event) => {
+            const id = pickBallAt(
+              { x: event.clientX, y: event.clientY },
+              pickModel.balls,
+            );
+            if (id !== null) dispatchInspect({ type: 'INSPECT', noteId: id });
+          }}
+        />
+      )}
     </div>
   );
 }
