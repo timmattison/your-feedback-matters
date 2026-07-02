@@ -10,6 +10,14 @@ export const MESH_SEGMENTS = 64;
 // re-crumple on dismiss) takes; tuned for feel in the polish phase.
 export const INSPECT_CRUMPLE_T = 0.05;
 export const INSPECT_DURATION_S = 0.9;
+
+// Draw order for the inspect lightbox. The scrim (a translucent dark quad) is
+// drawn after the basket/pile but BEFORE the pulled note, and the note is drawn
+// last — both with depth-testing off — so the scrim dims everything behind it
+// while the note on top stays bright. Higher renderOrder draws later; both are
+// above the default-0 pile so they paint over it.
+export const SCRIM_RENDER_ORDER = 10;
+export const INSPECTED_NOTE_RENDER_ORDER = 20;
 export const GRAVITY_Y = -9.81;
 // The basket is a tapered round bin: BASKET_RADIUS is the mouth (the design
 // width, unchanged), and the wall narrows to BASKET_BOTTOM_RADIUS at the floor.
