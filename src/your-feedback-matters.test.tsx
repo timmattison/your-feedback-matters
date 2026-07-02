@@ -283,6 +283,41 @@ test('the form goes inert while a note is inspected and is typeable again after 
   expect(form).not.toHaveAttribute('inert');
 });
 
+test('custom title and button labels override the copy; defaults keep the built-in copy', async () => {
+  const user = userEvent.setup();
+  const { unmount } = render(
+    <YourFeedbackMatters
+      title="Tell us more"
+      tossLabel="Trash it"
+      cancelLabel="Nope"
+      reopenLabel="Feedback?"
+    />,
+  );
+  // the closed-landing reopen button uses the custom label
+  expect(screen.getByRole('button', { name: 'Feedback?' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Feedback?' }));
+  // the heading and the toss/cancel buttons use the custom copy
+  expect(
+    screen.getByRole('heading', { name: 'Tell us more' }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Trash it' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Nope' })).toBeInTheDocument();
+  unmount();
+
+  // a default render (no copy props) still shows the original copy
+  render(<YourFeedbackMatters />);
+  await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
+  expect(
+    screen.getByRole('heading', { name: 'Your Feedback Matters' }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: TOSS_BUTTON_LABEL }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: CANCEL_BUTTON_LABEL }),
+  ).toBeInTheDocument();
+});
+
 test('css mode ignores animationend from other animations (e.g. a bubbled shake)', async () => {
   const user = userEvent.setup();
   render(<YourFeedbackMatters mode="css" />);
