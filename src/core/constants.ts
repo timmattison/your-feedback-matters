@@ -64,4 +64,4 @@ export const SLIDE_OUT_MS = 500;
 // pile's slide-in jolt is timed to this fraction of the slide — its visual stop
 // — instead of the nominal end, which would drop the kick into the dead pause
 // after the basket has already settled.
-export const SLIDE_IN_SETTLE_FRACTION = 0.6;
+export const SLIDE_IN_SETTLE_FRACTION = 0.5;
