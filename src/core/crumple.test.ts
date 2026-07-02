@@ -10,7 +10,10 @@ function grid(n = 24): Array<[number, number]> {
   return pts;
 }
 
-function radii(field: ReturnType<typeof createCrumpleField>, t: number): number[] {
+function radii(
+  field: ReturnType<typeof createCrumpleField>,
+  t: number,
+): number[] {
   return grid().map(([u, v]) => {
     const [x, y, z] = field.sample(u, v, t);
     return Math.hypot(x, y, z);
@@ -49,9 +52,14 @@ test('the ball is imperfect — lumpy, never a perfect sphere', () => {
 });
 
 test('mid-crumple the sheet is creased out of plane, not just scaled', () => {
+  // t = 0.3 sits exactly at the sphere-attraction onset (smoothstep(0.3, 1, 0.3) = 0),
+  // so every bit of z here must come from the fold ridges — deleting the fold loop
+  // makes this fail, unlike later t where the sphere target leaks z on its own.
+  // The threshold is relative to sheet size because fold amplitude scales with
+  // min(width, height); measured worst case over seeds 0..99 is ~0.057 * min(W, H).
   const f = createCrumpleField(5, W, H);
-  const zs = grid().map(([u, v]) => Math.abs(f.sample(u, v, 0.5)[2]));
-  expect(Math.max(...zs)).toBeGreaterThan(0.05);
+  const zs = grid().map(([u, v]) => Math.abs(f.sample(u, v, 0.3)[2]));
+  expect(Math.max(...zs)).toBeGreaterThan(0.01 * Math.min(W, H));
 });
 
 test('the crumple never explodes past the flat sheet size', () => {
