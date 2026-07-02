@@ -7,8 +7,11 @@ appears. Type a Name and a Comment, hit **"Circular file, in style,"** and
 watch the form snapshot itself, crumple into a lumpy paper ball, and get
 physically tossed at that wastebasket. About a quarter of throws rim out and
 roll away, because that's how throwing paper at a trash can actually goes.
-Once the paper's gone the basket slides back out and you're returned to the
-**"Got feedback?"** landing. That's the whole product. That's the joke.
+Made shots **stay** — the paper piles up in the basket across submissions,
+and only the ones that miss (or later get knocked out) actually disappear.
+When the basket slides back out and in, the pile gets jostled, so every now
+and then a wad hops the rim and goes flying. After each toss you're returned
+to the **"Got feedback?"** landing. That's the whole product. That's the joke.
 
 Leave a field blank and hit toss anyway, and the form shakes and scolds you
 in red: _"Be serious, there's nothing we can do if your feedback is
@@ -43,8 +46,16 @@ settling → closed`, see `src/core/feedback-machine.ts`). The app lands in
    nudged past the rim so the ball clangs off the basket and rolls away
    instead of swishing in (`MISS_PROBABILITY` in `src/core/constants.ts`).
    Rest is detected by watching the physics body's velocity settle (or a
-   timeout, whichever comes first), at which point the ball fades out and
-   the form resets for another round.
+   timeout, whichever comes first).
+5. **Pile or cull.** At rest each ball checks whether it's inside the mouth
+   (`isBallInBasket`, `src/core/basket-containment.ts`). Made shots persist —
+   the pile lives in the scene across the closed↔open cycle, so paper
+   accumulates and later tosses land on the stack. A ball that ended up
+   outside fades out and is removed. Whenever the basket slides, every
+   resting ball gets a random kick (`JOLT_*` in `src/core/constants.ts`); most
+   resettle, but the odd one clears the rim, falls out, and is culled by the
+   same rule — the pile's "chance to go flying." The form then resets for
+   another round.
 
 ### Fallbacks
 

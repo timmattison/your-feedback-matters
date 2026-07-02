@@ -63,9 +63,11 @@ idle ──Toss, both fields filled──▶ capturing ──▶ crumpling ─�
 - **crumpling**: deformation parameter t animates 0→1 over ~1.1 s (eased).
 - **tossing**: rigid body gets a computed impulse + random torque toward the
   basket. ~25% of throws (seeded) hit the rim and roll away off-screen.
-- **settling**: ball rests in basket (or exits viewport); after a beat it fades
-  and is removed, then the machine returns to `closed` — the basket slides
-  back out to the "Got feedback?" landing. Repeatable forever.
+- **settling**: ball comes to rest, then the machine returns to `closed` — the
+  basket slides back out to the "Got feedback?" landing. The ball itself is
+  **not** tied to this phase: at rest it decides whether it landed in the basket
+  (stays, piling up) or fell out (fades and is removed). See "Paper pile" below.
+  Repeatable forever.
 
 ## Architecture
 
@@ -128,6 +130,25 @@ Property tests (vitest, deterministic by seed):
   not keyframed.
 - Basket: bottom-right of the viewport; simple wire-basket look; collider is a
   static compound (ring of thin boxes + floor disc) so rim bounces work.
+
+## Paper pile
+
+Tossed paper is not transient. The scene (`crumple-scene.tsx`) keeps a **pile**
+of every ball that hasn't fallen out, in React state that outlives the
+closed↔open cycle (the scene stays mounted in full3d). Each toss appends a
+`PaperBall` (`scene/paper-ball.tsx`); it flies under physics and later tosses
+land on the stack.
+
+- **Classify on rest** — `isBallInBasket` (`core/basket-containment.ts`, pure +
+  TDD'd) is a horizontal distance-to-rim test. Inside the mouth → the ball stays
+  (a made shot piling up). Outside → it fades and the pile drops it. This covers
+  both a missed toss that rolled away and a paper knocked clear later.
+- **Jolt on slide** — every time the basket slides (the `visible` flip), the
+  scene bumps a nonce and each resting ball applies a random up+sideways
+  velocity (`JOLT_*` in `constants.ts`). Most resettle; a few clear the rim,
+  fall out, and are culled by the same rule — "a chance to go flying."
+- **Unbounded** — the pile grows without a cap (an accepted trade-off);
+  each ball frees its geometry/texture/material on removal or unmount.
 
 ## Error Handling & Degradation
 
