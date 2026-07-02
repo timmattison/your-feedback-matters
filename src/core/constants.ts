@@ -2,6 +2,14 @@ export const CAMERA_FOV_DEG = 50;
 export const CAMERA_DISTANCE = 10;
 export const CRUMPLE_DURATION_S = 1.1;
 export const MESH_SEGMENTS = 64;
+
+// Fishing a piled wad back out to inspect it. INSPECT_CRUMPLE_T is the crumple
+// parameter the note un-crumples *to* — ~95% flat (t = 0.05), left slightly
+// creased so it still reads as a fished-out piece of paper rather than a pristine
+// sheet. INSPECT_DURATION_S is how long the un-crumple fly-up (and the mirrored
+// re-crumple on dismiss) takes; tuned for feel in the polish phase.
+export const INSPECT_CRUMPLE_T = 0.05;
+export const INSPECT_DURATION_S = 0.9;
 export const GRAVITY_Y = -9.81;
 // The basket is a tapered round bin: BASKET_RADIUS is the mouth (the design
 // width, unchanged), and the wall narrows to BASKET_BOTTOM_RADIUS at the floor.
