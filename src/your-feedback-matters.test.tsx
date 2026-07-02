@@ -40,6 +40,31 @@ async function openForm(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
 }
 
+test('renders a consumer-supplied set of fields; defaults to Name/Comment', async () => {
+  const user = userEvent.setup();
+  const { unmount } = render(
+    <YourFeedbackMatters
+      fields={[
+        { name: 'email', label: 'Email' },
+        { name: 'msg', label: 'Message', type: 'textarea' },
+      ]}
+      mode="full3d"
+    />,
+  );
+  await openForm(user);
+  expect(screen.getByLabelText('Email')).toBeInTheDocument();
+  expect(screen.getByLabelText('Message')).toBeInTheDocument();
+  // the custom set replaces the defaults entirely
+  expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+  unmount();
+
+  // a default render (no `fields` prop) still shows Name + Comment
+  render(<YourFeedbackMatters mode="full3d" />);
+  await openForm(user);
+  expect(screen.getByLabelText('Name')).toBeInTheDocument();
+  expect(screen.getByLabelText('Comment')).toBeInTheDocument();
+});
+
 test('footer shows the Powered by badge linking to the repo (once opened)', async () => {
   const user = userEvent.setup();
   render(<YourFeedbackMatters />);
