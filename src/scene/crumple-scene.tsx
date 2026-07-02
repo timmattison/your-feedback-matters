@@ -49,6 +49,14 @@ interface PileEntry {
   startPosition: [number, number, number];
   ballRadius: number;
   seed: number;
+  // The sheet's world dimensions at toss time — feeds the pick math and the
+  // un-crumple back to a flat note in later phases.
+  width: number;
+  height: number;
+  // Live resting pose, tracked once the wad settles into the pile. Both stay
+  // null until the wad first comes to rest; the fly-back animation reads them.
+  restPosition: [number, number, number] | null;
+  restQuaternion: [number, number, number, number] | null;
 }
 
 function SceneContents(props: CrumpleSceneProps) {
@@ -156,6 +164,10 @@ function SceneContents(props: CrumpleSceneProps) {
                     startPosition: worldRect.center,
                     ballRadius: field.ballRadius,
                     seed: props.tossSeed,
+                    width: worldRect.width,
+                    height: worldRect.height,
+                    restPosition: null,
+                    restQuaternion: null,
                   },
                 ]);
                 setActiveId(id);
