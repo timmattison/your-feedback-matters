@@ -3,7 +3,11 @@ import { toPng } from 'html-to-image';
 import './your-feedback-matters.css';
 import { FeedbackForm } from './feedback-form';
 import { CrumpleScene } from './scene/crumple-scene';
-import { createInitialState, feedbackReducer } from './core/feedback-machine';
+import {
+  createInitialState,
+  feedbackReducer,
+  type FormFields,
+} from './core/feedback-machine';
 import { DEFAULT_FIELDS, type FieldConfig } from './core/fields';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
 import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
@@ -31,11 +35,19 @@ export interface YourFeedbackMattersProps {
    * it afterwards has no effect.
    */
   fields?: FieldConfig[];
+  /**
+   * Called once with the collected field values the moment a non-blank toss is
+   * accepted (before the crumple animation). The host decides what to do with
+   * the feedback — POST it, store it, etc. Blank tosses (which shake + scold)
+   * never fire this. The widget stays storage-agnostic.
+   */
+  onSubmit?: (feedback: FormFields) => void;
 }
 
 export function YourFeedbackMatters({
   mode,
   fields,
+  onSubmit,
 }: YourFeedbackMattersProps = {}) {
   // Resolved once per mount so a mid-session change to the media query or
   // WebGL support doesn't yank the user between rendering strategies
@@ -111,6 +123,17 @@ export function YourFeedbackMatters({
       cancelled = true;
     };
   }, [state.phase, resolvedMode]);
+
+  // Hand the accepted feedback to the host exactly once per toss. Entering
+  // 'capturing' IS the accepted-toss transition (blank tosses go to 'error'
+  // instead and never reach here), and every mode passes through 'capturing',
+  // so this fires once per toss in all modes and never for a blank one.
+  // deps intentionally [state.phase] to fire once per toss, matching the other
+  // phase-keyed effects in this file — not on onSubmit/state.fields identity.
+  useEffect(() => {
+    if (state.phase === 'capturing') onSubmit?.(state.fields);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
 
   // Fallback modes have no physics toss: as soon as the crumple "starts",
   // walk the machine straight through to settling. A CSS animation (css
