@@ -35,8 +35,11 @@ import {
   CAMERA_DISTANCE,
   CAMERA_FOV_DEG,
   GRAVITY_Y,
+  PICK_MIN_RADIUS_PX,
+  PICK_RADIUS_SCALE,
   PILE_FRICTION,
   PILE_RESTITUTION,
+  SCRIM_OPACITY,
   SCRIM_RENDER_ORDER,
 } from '../core/constants';
 import { joltDelayMs } from '../core/jolt';
@@ -196,7 +199,13 @@ function SceneContents(props: SceneContentsProps) {
             id: entry.id,
             cx: center.x,
             cy: center.y,
-            r: worldRadiusToScreen(entry.ballRadius, viewport, CAMERA),
+            // Pad the projected wad radius so clicking anywhere on the small,
+            // low-sitting wad registers (see PICK_* in constants).
+            r: Math.max(
+              worldRadiusToScreen(entry.ballRadius, viewport, CAMERA) *
+                PICK_RADIUS_SCALE,
+              PICK_MIN_RADIUS_PX,
+            ),
             depth: rest[2],
           };
         }),
@@ -307,7 +316,7 @@ function SceneContents(props: SceneContentsProps) {
             <meshBasicMaterial
               color="black"
               transparent
-              opacity={0.6}
+              opacity={SCRIM_OPACITY}
               depthTest={false}
               depthWrite={false}
             />

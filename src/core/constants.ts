@@ -18,6 +18,20 @@ export const INSPECT_DURATION_S = 0.9;
 // above the default-0 pile so they paint over it.
 export const SCRIM_RENDER_ORDER = 10;
 export const INSPECTED_NOTE_RENDER_ORDER = 20;
+// Lightbox dim. The pulled note draws in front of this at full brightness, so
+// the scrim has to be dark enough that the note (a snapshot of the same form,
+// landing on the form's own spot) reads as a distinct, lit-up peek rather than
+// blending into the form showing through behind it.
+export const SCRIM_OPACITY = 0.82;
+
+// A resting wad projects to only a few dozen pixels and sits low in the basket,
+// partly behind the rim — too small to click reliably if the hit disk is exactly
+// the wad's radius. Pad the pick target so clicking anywhere on the visible wad
+// registers: scale the projected radius and enforce a pixel floor. Picking stays
+// unambiguous — the basket holds nothing but wads, and overlaps resolve to the
+// front-most wad (see pickBallAt).
+export const PICK_RADIUS_SCALE = 1.8;
+export const PICK_MIN_RADIUS_PX = 48;
 export const GRAVITY_Y = -9.81;
 // The basket is a tapered round bin: BASKET_RADIUS is the mouth (the design
 // width, unchanged), and the wall narrows to BASKET_BOTTOM_RADIUS at the floor.
