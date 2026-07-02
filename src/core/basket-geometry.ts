@@ -51,6 +51,9 @@ export interface WallElement {
  * ring (`f0 > 0`) so they don't poke through the bottom, while the physics wall
  * spans the full height (`f0 = 0`).
  */
-export function basketWallElement(_f0: number, _f1: number): WallElement {
-  throw new Error('not implemented');
+export function basketWallElement(f0: number, f1: number): WallElement {
+  return {
+    centerHeight: ((f0 + f1) / 2) * BASKET_HEIGHT,
+    length: (f1 - f0) * basketWallSlant().length,
+  };
 }
