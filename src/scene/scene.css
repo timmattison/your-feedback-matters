@@ -6,8 +6,9 @@
   /* The basket sits bottom-right; slide the whole (transparent) overlay in
      from off the right edge. Slide-IN uses easeOutExpo — a fast launch that
      decelerates into place, "smooth but fast". The 0.7s here MUST match
-     SLIDE_IN_MS in core/constants.ts — the pile's slide-in jolt is timed to fire
-     as this transition finishes. */
+     SLIDE_IN_MS in core/constants.ts — the pile's slide-in jolt is timed to a
+     fraction of it (SLIDE_IN_SETTLE_FRACTION) so the kick lands on this curve's
+     visual stop, before its long, near-motionless tail. */
   transform: translateX(0);
   transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;

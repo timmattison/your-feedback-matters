@@ -57,8 +57,10 @@ settling → closed`, see `src/core/feedback-machine.ts`). The app lands in
    removed. Whenever the basket slides, every resting ball wakes and gets a
    random kick (`JOLT_*`); most resettle, but the odd one clears the rim, falls
    out, and is culled by the same rule — the pile's "chance to go flying." The
-   slide-in kick is held until the basket finishes arriving on-screen
-   (`joltDelayMs`, `src/core/jolt.ts`) so the papers fly in view. The form then
+   slide-in kick is held until the basket reaches its visual stop
+   (`joltDelayMs`, `src/core/jolt.ts`) — a fraction of the slide, since the
+   easeOutExpo curve parks the basket before its nominal end — so the papers fly
+   the moment it settles rather than in the dead pause after. The form then
    resets for another round.
 
 ### Fallbacks

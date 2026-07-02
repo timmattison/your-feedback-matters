@@ -153,8 +153,10 @@ land on the stack.
   up+sideways velocity (`JOLT_*` in `constants.ts`). Most resettle; a few clear
   the rim, fall out, and are culled by the same rule — "a chance to go flying."
   The slide-**in** kick is held (`joltDelayMs`, `core/jolt.ts`, TDD'd) until the
-  basket has finished arriving on-screen, so the papers fly where they can be
-  seen rather than while the overlay is still off to the right.
+  basket reaches its _visual_ stop — a fraction of the slide, since the
+  easeOutExpo curve parks the basket well before its nominal end — so the papers
+  fly on-screen the moment the basket settles, not while it is still off to the
+  right and not in the dead pause after the curve's long tail.
 - **Unbounded** — the pile grows without a cap (an accepted trade-off);
   each ball frees its geometry/texture/material on removal or unmount.
 

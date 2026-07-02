@@ -57,3 +57,11 @@ export const PILE_RESTITUTION = 0.08;
 // the animation if the two agree.
 export const SLIDE_IN_MS = 700;
 export const SLIDE_OUT_MS = 500;
+
+// The slide-in easing (easeOutExpo in scene.css) covers ~99% of the distance in
+// the first ~60% of SLIDE_IN_MS, then inches through a long tail. The basket
+// therefore *looks* parked well before the transition nominally ends, so the
+// pile's slide-in jolt is timed to this fraction of the slide — its visual stop
+// — instead of the nominal end, which would drop the kick into the dead pause
+// after the basket has already settled.
+export const SLIDE_IN_SETTLE_FRACTION = 0.6;
