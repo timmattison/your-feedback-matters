@@ -62,6 +62,42 @@ test('mid-crumple the sheet is creased out of plane, not just scaled', () => {
   expect(Math.max(...zs)).toBeGreaterThan(0.01 * Math.min(W, H));
 });
 
+test('the crumple never turns inside-out — the sheet keeps its layout, top above bottom', () => {
+  // The old globe map sent v (the sheet's top edge) to phi = π (the sphere's south
+  // pole) and v = 0 to the north pole, so the sheet swept through the origin and
+  // flipped inside-out — a point-reflection about the center. A realistic crumple
+  // drapes the sheet over the ball keeping its layout: the top half must never end
+  // up, on average, below the bottom half.
+  for (const seed of [1, 3, 7, 42]) {
+    const f = createCrumpleField(seed, W, H);
+    let topSum = 0;
+    let topN = 0;
+    let botSum = 0;
+    let botN = 0;
+    for (const [u, v] of grid()) {
+      const y = f.sample(u, v, 1)[1];
+      if (v > 0.5) {
+        topSum += y;
+        topN++;
+      } else if (v < 0.5) {
+        botSum += y;
+        botN++;
+      }
+    }
+    expect(topSum / topN).toBeGreaterThan(botSum / botN);
+  }
+});
+
+test('the sheet drapes front-forward — its center faces the camera (+z)', () => {
+  // The old map put the sheet's center (u = v = 0.5) at theta = π on the far side of
+  // the ball (z = 0) and hid it; the readable face pointed away. Draping keeps the
+  // center facing the camera so the crumpled snapshot still reads right-side up.
+  const f = createCrumpleField(3, W, H);
+  // Genuinely forward, not merely non-negative by a floating-point hair
+  // (the old map's center z was sin(π)·r ≈ 1e-16).
+  expect(f.sample(0.5, 0.5, 1)[2]).toBeGreaterThan(f.ballRadius * 0.5);
+});
+
 test('the crumple never explodes past the flat sheet size', () => {
   const f = createCrumpleField(11, W, H);
   const flatMax = Math.hypot(W / 2, H / 2);
