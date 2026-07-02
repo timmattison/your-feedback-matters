@@ -1,5 +1,5 @@
-import "./app.css";
-import { POWERED_BY_TEXT, REPO_URL } from "./core/copy";
+import './app.css';
+import { POWERED_BY_TEXT, REPO_URL } from './core/copy';
 
 export function App() {
   return (
