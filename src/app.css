@@ -9,13 +9,38 @@
   bottom: 0.75rem;
   font-size: 0.8rem;
   z-index: 20;
+  /* The badge sits over the steel basket in the bottom-right corner, so plain
+     gray text on it was unreadable. Give the text its own frosted pill: it now
+     rests on a consistent, near-opaque surface regardless of what's behind it
+     (the page, the can, or a dark theme) rather than directly on the artwork. */
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .powered-by a {
-  color: #888;
+  color: #23262b;
   text-decoration: none;
+  font-weight: 600;
 }
 .powered-by a:hover {
   text-decoration: underline;
+}
+
+/* On a dark theme, flip the pill dark with light text so it stays legible
+   instead of glowing white in the corner. */
+@media (prefers-color-scheme: dark) {
+  .powered-by {
+    background: rgba(24, 26, 30, 0.74);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  }
+  .powered-by a {
+    color: #f1f3f6;
+  }
 }
 
 /* css fallback (no WebGL): the crumpling paper physics is faked with a
