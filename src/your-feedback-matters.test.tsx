@@ -177,6 +177,30 @@ test('a filled toss captures the form and hides it for the crumple', async () =>
   ).toBeNull();
 });
 
+test('a non-blank toss calls onSubmit once with the collected field values', async () => {
+  const user = userEvent.setup();
+  const onSubmit = vi.fn();
+  render(<YourFeedbackMatters mode="full3d" onSubmit={onSubmit} />);
+  await openForm(user);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
+  await user.type(screen.getByLabelText('Comment'), 'straight to the bin');
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  expect(onSubmit).toHaveBeenCalledWith({
+    name: 'Tim',
+    comment: 'straight to the bin',
+  });
+});
+
+test('a blank toss never calls onSubmit', async () => {
+  const user = userEvent.setup();
+  const onSubmit = vi.fn();
+  render(<YourFeedbackMatters onSubmit={onSubmit} />);
+  await openForm(user);
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  expect(onSubmit).not.toHaveBeenCalled();
+});
+
 test('a failed snapshot capture still advances instead of sticking in capturing', async () => {
   const user = userEvent.setup();
   vi.mocked(toPng).mockRejectedValueOnce(new Error('capture failed'));
