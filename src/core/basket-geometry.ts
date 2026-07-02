@@ -1,4 +1,8 @@
-import { BASKET_BOTTOM_RADIUS, BASKET_HEIGHT, BASKET_RADIUS } from './constants';
+import {
+  BASKET_BOTTOM_RADIUS,
+  BASKET_HEIGHT,
+  BASKET_RADIUS,
+} from './constants';
 
 /**
  * Radius of the tapered basket wall at height fraction `f`, where `f = 0` is the
@@ -7,8 +11,8 @@ import { BASKET_BOTTOM_RADIUS, BASKET_HEIGHT, BASKET_RADIUS } from './constants'
  * floor, giving the round bin its normal inward taper. Both the visible mesh and
  * the physics wall are built from this single function so they stay identical.
  */
-export function basketRadiusAtHeightFraction(_f: number): number {
-  throw new Error('not implemented');
+export function basketRadiusAtHeightFraction(f: number): number {
+  return BASKET_BOTTOM_RADIUS + (BASKET_RADIUS - BASKET_BOTTOM_RADIUS) * f;
 }
 
 export interface WallSlant {
@@ -25,5 +29,9 @@ export interface WallSlant {
  * tilted from vertical by `tilt`.
  */
 export function basketWallSlant(): WallSlant {
-  throw new Error('not implemented');
+  const run = BASKET_RADIUS - BASKET_BOTTOM_RADIUS;
+  return {
+    length: Math.hypot(run, BASKET_HEIGHT),
+    tilt: Math.atan2(run, BASKET_HEIGHT),
+  };
 }

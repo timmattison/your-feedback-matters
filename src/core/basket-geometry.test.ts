@@ -16,7 +16,10 @@ describe('basketRadiusAtHeightFraction', () => {
   });
 
   it('narrows to the bottom radius at the floor', () => {
-    expect(basketRadiusAtHeightFraction(0)).toBeCloseTo(BASKET_BOTTOM_RADIUS, 6);
+    expect(basketRadiusAtHeightFraction(0)).toBeCloseTo(
+      BASKET_BOTTOM_RADIUS,
+      6,
+    );
   });
 
   it('is narrower at the floor than at the mouth (it tapers inward)', () => {
@@ -26,7 +29,9 @@ describe('basketRadiusAtHeightFraction', () => {
   });
 
   it('widens monotonically from floor to mouth', () => {
-    const samples = [0, 0.2, 0.4, 0.6, 0.8, 1].map(basketRadiusAtHeightFraction);
+    const samples = [0, 0.2, 0.4, 0.6, 0.8, 1].map(
+      basketRadiusAtHeightFraction,
+    );
     for (let i = 1; i < samples.length; i++) {
       expect(samples[i]).toBeGreaterThan(samples[i - 1]);
     }
@@ -47,7 +52,10 @@ describe('basketWallSlant', () => {
 
   it('matches the hypotenuse of the taper run and the height', () => {
     const run = BASKET_RADIUS - BASKET_BOTTOM_RADIUS;
-    expect(basketWallSlant().length).toBeCloseTo(Math.hypot(run, BASKET_HEIGHT), 6);
+    expect(basketWallSlant().length).toBeCloseTo(
+      Math.hypot(run, BASKET_HEIGHT),
+      6,
+    );
   });
 
   it('leans outward by the taper angle', () => {
