@@ -1,9 +1,5 @@
 import { worldPointToScreen } from './screen-to-world';
-import {
-  basketScreenRect,
-  pickBallAt,
-  type ScreenBall,
-} from './pick-ball';
+import { basketScreenRect, pickBallAt, type ScreenBall } from './pick-ball';
 
 const cam = { fovDeg: 50, distance: 10 };
 const viewport = { width: 1000, height: 800 };
@@ -47,10 +43,7 @@ test('pickBallAt returns the front-most wad on overlap (front-most listed last)'
 });
 
 test('pickBallAt does not mutate the input array', () => {
-  const balls = [
-    ball(1, 95, 100, 30, 1),
-    ball(2, 105, 100, 30, 5),
-  ];
+  const balls = [ball(1, 95, 100, 30, 1), ball(2, 105, 100, 30, 5)];
   const snapshot = [...balls];
   pickBallAt({ x: 100, y: 100 }, balls);
   expect(balls).toEqual(snapshot);
