@@ -19,6 +19,11 @@ import {
   SETTLE_TIMEOUT_MS,
 } from '../core/constants';
 
+export interface RestPose {
+  position: [number, number, number];
+  quaternion: [number, number, number, number];
+}
+
 export interface PaperBallProps {
   geometry: THREE.BufferGeometry; // the crumpled mesh, cloned per ball
   snapshotUrl: string | null;
@@ -33,6 +38,10 @@ export interface PaperBallProps {
   joltNonce: number;
   onRested(): void; // once, when the active ball first calms or times out
   onFellOut(): void; // once, after a ball outside the basket has faded away
+  /** Fires on each rising edge of resting (once per settle) with the wad's live
+   *  pose, so the pile can record where every clickable wad came to rest. Unlike
+   *  onRested this is not gated on isActive — every settled wad reports. */
+  onRestPose(pose: RestPose): void;
 }
 
 /**
@@ -55,6 +64,7 @@ export function PaperBall({
   joltNonce,
   onRested,
   onFellOut,
+  onRestPose,
 }: PaperBallProps) {
   const plan = useMemo(
     () =>
@@ -99,16 +109,22 @@ export function PaperBall({
   isActiveRef.current = isActive;
   const basketBaseRef = useRef(basketBase);
   basketBaseRef.current = basketBase;
+  const quaternionRef = useRef<[number, number, number, number]>([0, 0, 0, 1]);
   const onRestedRef = useRef(onRested);
   onRestedRef.current = onRested;
   const onFellOutRef = useRef(onFellOut);
   onFellOutRef.current = onFellOut;
+  const onRestPoseRef = useRef(onRestPose);
+  onRestPoseRef.current = onRestPose;
 
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     const unsubPos = api.position.subscribe((p) => {
       positionRef.current = [p[0], p[1], p[2]];
+    });
+    const unsubQuat = api.quaternion.subscribe((q) => {
+      quaternionRef.current = [q[0], q[1], q[2], q[3]];
     });
     let calmFrames = 0;
     const startedAt = performance.now();
@@ -117,7 +133,18 @@ export function PaperBall({
       calmFrames = speed < REST_SPEED_THRESHOLD ? calmFrames + 1 : 0;
       const settled = calmFrames > 30;
       const timedOut = performance.now() - startedAt > SETTLE_TIMEOUT_MS;
+      const wasResting = restingRef.current;
       restingRef.current = settled;
+      // Rising edge of resting: the wad just came to rest. Report its live pose so
+      // the pile can record where this (clickable) wad settled. Fires once per
+      // settle — re-arms if a jolt knocks it loose and it settles again — and never
+      // for a wad that never settles (settled stays false → no rising edge).
+      if (settled && !wasResting) {
+        onRestPoseRef.current({
+          position: positionRef.current,
+          quaternion: quaternionRef.current,
+        });
+      }
       if (!settled && !timedOut) return;
       // The active toss tells the machine it has come to rest, exactly once.
       if (isActiveRef.current && !reportedRef.current) {
@@ -139,8 +166,9 @@ export function PaperBall({
     return () => {
       unsubPos();
       unsubVel();
+      unsubQuat();
     };
-  }, [api.position, api.velocity]);
+  }, [api.position, api.velocity, api.quaternion]);
 
   // Kick on each slide. Skip the initial mount, and only jostle a ball that is
   // actually resting in the pile (not mid-flight, not already leaving).

@@ -189,6 +189,19 @@ function SceneContents(props: CrumpleSceneProps) {
             joltNonce={joltNonce}
             onRested={props.onBallRested}
             onFellOut={() => removeBall(entry.id)}
+            onRestPose={(pose) =>
+              setPile((current) =>
+                current.map((e) =>
+                  e.id === entry.id
+                    ? {
+                        ...e,
+                        restPosition: pose.position,
+                        restQuaternion: pose.quaternion,
+                      }
+                    : e,
+                ),
+              )
+            }
           />
         ))}
       </Physics>
