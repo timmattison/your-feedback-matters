@@ -8,6 +8,6 @@ import { SLIDE_IN_MS } from './constants';
  * the basket is fully on-screen the instant it starts to leave, so jolt at once
  * and let the pile scatter as it departs.
  */
-export function joltDelayMs(_becomingVisible: boolean): number {
-  return -1;
+export function joltDelayMs(becomingVisible: boolean): number {
+  return becomingVisible ? SLIDE_IN_MS : 0;
 }
