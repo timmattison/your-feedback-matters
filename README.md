@@ -1,31 +1,12 @@
 # Your Feedback Matters
 
-A feedback form with exactly one honest feature: **your feedback is never
-stored anywhere.** The page opens on a single **"Got feedback?"** button;
-click it and a wire wastebasket slides in from the right while the form
-appears. Type a Name and a Comment, hit **"Circular file, in style,"** and
-watch the form snapshot itself, crumple into a lumpy paper ball, and get
-physically tossed at that wastebasket. About a quarter of throws rim out and
-roll away, because that's how throwing paper at a trash can actually goes.
-Made shots **stay** — the paper piles up in the basket across submissions,
-and only the ones that miss (or later get knocked out) actually disappear.
-When the basket slides back out and in, the pile gets jostled, so every now
-and then a wad hops the rim and goes flying. After each toss you're returned
-to the **"Got feedback?"** landing. Click any wad that made it into the basket
-and you can fish it back out: the scene and form dim behind a dark scrim, that
-note un-crumples and floats up to where the form used to be so you can re-read
-what you wrote. Click anywhere and it re-crumples on the spot and gets thrown
-straight back into the bin. It's read-only the whole time — the note never
-becomes editable and nothing you typed is ever stored. That's the whole
-product. That's the joke.
+NOTE: This project was created with AI because I had a funny idea and just wanted to get it done. If you don't like that you can use this component to report your feelings.
 
-Leave a field blank and hit toss anyway, and the form shakes and scolds you
-in red: _"Be serious, there's nothing we can do if your feedback is
-blank"._ Hit **Cancel** and the form politely closes and the basket slides
-away, back to the **"Got feedback?"** button. Either way, nothing you type is
-ever sent, saved, logged, or read by anyone. There is no backend.
+An optimized website feedback system that is possibly GDPR capable.
 
-![A feedback form crumples into a paper ball and is tossed into a wire wastebasket](./docs/crumple-toss.gif)
+People "submit" their feedback. That feedback is "stored" where it can only be reviewed in the same browser that submitted it. No servers, no databases, no complaints.
+
+But please, don't waste our time by trying to file a blank form. It's not fair to you. It's not fair to us. Let's work together to make sure everyone's feedback matters equally.
 
 ## How it works
 
@@ -182,14 +163,6 @@ The `core/` modules have no React or Three.js dependency and are TDD'd in
 isolation; `scene/` and the top-level components are deliberately thin —
 they read state and forward it into `core/` functions rather than
 reimplementing any of the math.
-
-## Docs
-
-- Design spec: [`specs/2026-07-01-crumple-feedback-form-design.md`](./specs/2026-07-01-crumple-feedback-form-design.md)
-- Implementation plan: [`plans/2026-07-01-crumple-feedback-form-plan.md`](./plans/2026-07-01-crumple-feedback-form-plan.md)
-- Fish-it-back-out design spec: [`specs/2026-07-02-inspect-piled-note-design.md`](./specs/2026-07-02-inspect-piled-note-design.md)
-- Fish-it-back-out implementation plan: [`plans/2026-07-02-inspect-piled-note-plan.md`](./plans/2026-07-02-inspect-piled-note-plan.md)
-- Ideas not yet built: [`WISHLIST.md`](./WISHLIST.md)
 
 ## Deploying
 
