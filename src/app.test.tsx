@@ -145,7 +145,37 @@ test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on a
   expect(sceneProps.current).toBeNull();
 
   act(() => {
-    fireEvent.animationEnd(wrapper as HTMLElement);
+    fireEvent.animationEnd(wrapper as HTMLElement, {
+      animationName: 'css-toss',
+    });
+  });
+  expect(screen.getByLabelText('Name')).toHaveValue('');
+  expect(screen.getByLabelText('Comment')).toHaveValue('');
+});
+
+test('css mode ignores animationend from other animations (e.g. a bubbled shake)', async () => {
+  const user = userEvent.setup();
+  render(<App mode="css" />);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
+  await user.type(screen.getByLabelText('Comment'), 'no webgl here');
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+
+  const form = await screen.findByRole('form', { name: 'Feedback form' });
+  const wrapper = form.parentElement as HTMLElement;
+  await waitFor(() => expect(wrapper).toHaveClass('css-toss'));
+
+  // The form's own `shake` animation bubbles its animationend up through
+  // this wrapper. It must NOT end the toss early — only the wrapper's own
+  // css-toss animation may advance the machine.
+  act(() => {
+    fireEvent.animationEnd(form, { animationName: 'shake' });
+  });
+  expect(screen.getByLabelText('Name')).toHaveValue('Tim');
+  expect(wrapper).toHaveClass('css-toss');
+
+  // ...and the real css-toss completion still resets the form.
+  act(() => {
+    fireEvent.animationEnd(wrapper, { animationName: 'css-toss' });
   });
   expect(screen.getByLabelText('Name')).toHaveValue('');
   expect(screen.getByLabelText('Comment')).toHaveValue('');

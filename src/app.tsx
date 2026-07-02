@@ -7,6 +7,11 @@ import { feedbackReducer, initialState } from './core/feedback-machine';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
 import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
 
+// Class name and @keyframes name (src/app.css) for the css-mode toss.
+// The animationend handler keys on this exact animation name, so the class,
+// the keyframes, and the guard must all agree.
+const CSS_TOSS_ANIMATION = 'css-toss';
+
 export interface AppProps {
   /**
    * Forces the animation mode instead of auto-detecting it via
@@ -121,12 +126,18 @@ export function App({ mode }: AppProps = {}) {
             className={
               animatingWithoutScene
                 ? resolvedMode === 'css'
-                  ? 'css-toss'
+                  ? CSS_TOSS_ANIMATION
                   : 'instant-fade'
                 : undefined
             }
-            onAnimationEnd={() => {
-              if (resolvedMode === 'css') {
+            onAnimationEnd={(event) => {
+              // animationend bubbles, so the form's own animations (e.g.
+              // the error shake) pass through here too — only the wrapper's
+              // toss animation itself may end the settle.
+              if (
+                resolvedMode === 'css' &&
+                event.animationName === CSS_TOSS_ANIMATION
+              ) {
                 dispatch({ type: 'SETTLE_FINISHED' });
               }
             }}
