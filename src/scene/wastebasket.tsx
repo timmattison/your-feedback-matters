@@ -8,14 +8,15 @@ import { BASKET_HEIGHT, BASKET_RADIUS } from '../core/constants';
 const WALL_SEGMENTS = 12;
 
 // Visuals: a shaded steel wire-mesh bin — vertical ribs crossed by horizontal
-// rings, capped with a rounded rim and standing on a footed base.
+// rings, capped with a rounded rim at the mouth and a matching rim where the
+// ribs meet a solid full-width floor plate.
 const VERTICAL_RIBS = 24;
 const RING_HEIGHTS = [0.16, 0.44, 0.72]; // fractions of BASKET_HEIGHT
 const RIB_RADIUS = 0.02;
 const RING_TUBE = 0.022;
 const RIM_TUBE = 0.05;
 const FOOT_TUBE = 0.045;
-const FLOOR_THICKNESS = 0.06;
+const FLOOR_THICKNESS = 0.1;
 
 // meshStandardMaterial has no environment map to reflect, so keep metalness low
 // and lean on the scene's directional + hemisphere lights for the shaded, round
@@ -56,15 +57,12 @@ function WallSegment({
 function BasketFrame({ base }: { base: [number, number, number] }) {
   return (
     <group position={base}>
-      {/* solid floor so you can't see through the bottom */}
-      <mesh position={[0, FLOOR_THICKNESS / 2 + 0.02, 0]}>
+      {/* solid full-width floor so the ribs land on it and you can't see
+          through the bottom. Straight (not tapered) so its edge sits at the
+          same radius as the walls, flush with the ribs. */}
+      <mesh position={[0, FLOOR_THICKNESS / 2, 0]}>
         <cylinderGeometry
-          args={[
-            BASKET_RADIUS * 0.95,
-            BASKET_RADIUS * 0.86,
-            FLOOR_THICKNESS,
-            32,
-          ]}
+          args={[BASKET_RADIUS, BASKET_RADIUS, FLOOR_THICKNESS, 40]}
         />
         <meshStandardMaterial {...STEEL} />
       </mesh>
@@ -107,9 +105,10 @@ function BasketFrame({ base }: { base: [number, number, number] }) {
         <meshStandardMaterial {...STEEL_BRIGHT} />
       </mesh>
 
-      {/* footed base ring */}
-      <mesh position={[0, 0.02, 0]} rotation={FLAT_RING}>
-        <torusGeometry args={[BASKET_RADIUS * 0.9, FOOT_TUBE, 12, 48]} />
+      {/* bottom rim where the ribs meet the floor — mirrors the top rim and
+          ties the ribs to the full-width floor plate */}
+      <mesh position={[0, FLOOR_THICKNESS, 0]} rotation={FLAT_RING}>
+        <torusGeometry args={[BASKET_RADIUS, FOOT_TUBE, 12, 48]} />
         <meshStandardMaterial {...STEEL_BRIGHT} />
       </mesh>
     </group>
