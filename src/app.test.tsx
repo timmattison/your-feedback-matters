@@ -46,6 +46,16 @@ test('footer shows the Powered by badge linking to the repo', () => {
   expect(link).toHaveAttribute('href', REPO_URL);
 });
 
+test('the Powered by badge is hidden on the landing and appears once opened', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  expect(screen.queryByRole('link', { name: POWERED_BY_TEXT })).toBeNull();
+  await openForm(user);
+  expect(
+    screen.getByRole('link', { name: POWERED_BY_TEXT }),
+  ).toBeInTheDocument();
+});
+
 test('the page lands on the "Got feedback?" button, not the form', () => {
   render(<App />);
   expect(
