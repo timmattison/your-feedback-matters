@@ -26,10 +26,10 @@
 }
 @keyframes css-toss {
   30% {
-    transform: scale(0.5) rotate(20deg);
+    transform: translate(0, 0) rotate(20deg) scale(0.5);
   }
   100% {
-    transform: scale(0.05) rotate(540deg) translate(60vw, 40vh);
+    transform: translate(60vw, 40vh) rotate(540deg) scale(0.05);
     opacity: 0;
   }
 }

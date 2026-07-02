@@ -59,7 +59,15 @@ export function App({ mode }: AppProps = {}) {
     }
     const node = formRef.current;
     if (node === null) {
+      // No form to snapshot or crumple (should be unreachable — the form
+      // is always mounted while phase is 'capturing'). The 3D scene only
+      // mounts CrumplingPaper/TossedBall once formRect is set, so leaving
+      // this at just CAPTURED would strand the machine in 'crumpling'
+      // forever with no CRUMPLE_FINISHED ever firing. Walk the whole chain
+      // by hand instead; the settling timer below takes it home from there.
       dispatch({ type: 'CAPTURED', snapshotUrl: null });
+      dispatch({ type: 'CRUMPLE_FINISHED' });
+      dispatch({ type: 'BALL_RESTED' });
       return;
     }
     setFormRect(node.getBoundingClientRect());
@@ -85,9 +93,9 @@ export function App({ mode }: AppProps = {}) {
     dispatch({ type: 'BALL_RESTED' });
   }, [state.phase, resolvedMode]);
 
-  // full3d relies on the scene's onSettleFinished callback, with this timer
-  // as a safety net. instant has no scene at all, so this timer is its only
-  // way out of 'settling'. css mode resolves via the form wrapper's
+  // full3d and instant both leave 'settling' via this timer — full3d has no
+  // scene callback for it (the 1200ms delay here IS the settle path), and
+  // instant has no scene at all. css mode resolves via the form wrapper's
   // animationend instead (see below) and is excluded here.
   useEffect(() => {
     if (state.phase !== 'settling' || resolvedMode === 'css') return;
@@ -158,7 +166,6 @@ export function App({ mode }: AppProps = {}) {
           formRect={formRect}
           onCrumpleFinished={() => dispatch({ type: 'CRUMPLE_FINISHED' })}
           onBallRested={() => dispatch({ type: 'BALL_RESTED' })}
-          onSettleFinished={() => dispatch({ type: 'SETTLE_FINISHED' })}
         />
       )}
       <footer className="powered-by">

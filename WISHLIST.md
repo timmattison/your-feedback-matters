@@ -23,3 +23,13 @@ Ideas that are out of scope for the current build but worth coming back to.
   worktree's agent policy disallows. Record `docs/crumple-toss.gif`
   manually (one make, one rim-out) and wire it into the README's
   screenshot/demo section.
+- **Predecode/share the crumple texture** — avoid the decode flash at the
+  form→paper and paper→ball handoff seams.
+- **Clamp basket placement on narrow/mobile viewports** — it currently
+  overlaps the form.
+- **Replace the reducer's `default:` case with a `never` exhaustiveness
+  check** in `src/core/feedback-machine.ts`.
+- **`useCallback` the scene callbacks passed from `App`** — harden
+  `TossedBall`'s rest detection against re-subscribing on every re-render.
+- **Ruled-lines fallback paper texture** — the spec calls for faint ruled
+  lines on snapshot failure; it currently renders plain off-white.

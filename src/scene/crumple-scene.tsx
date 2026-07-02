@@ -25,7 +25,6 @@ export interface CrumpleSceneProps {
   formRect: DOMRect | null;
   onCrumpleFinished(): void;
   onBallRested(): void;
-  onSettleFinished(): void;
 }
 
 const CAMERA = { fovDeg: CAMERA_FOV_DEG, distance: CAMERA_DISTANCE };

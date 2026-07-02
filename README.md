@@ -9,7 +9,7 @@ actually goes. That's the whole product. That's the joke.
 
 Leave a field blank and hit toss anyway, and the form shakes and scolds you
 in red: _"Be serious, there's nothing we can do if your feedback is
-blank."_ Hit **Cancel** and the form politely closes, replaced by a
+blank"._ Hit **Cancel** and the form politely closes, replaced by a
 **"Got feedback?"** button to reopen it. Either way, nothing you type is
 ever sent, saved, logged, or read by anyone. There is no backend.
 

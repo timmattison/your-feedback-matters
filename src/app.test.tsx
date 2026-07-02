@@ -97,8 +97,12 @@ test('after the toss settles, a fresh empty form is ready for another round', as
   expect(sceneProps.current?.phase).toBe('tossing');
   act(() => sceneProps.current?.onBallRested());
   expect(sceneProps.current?.phase).toBe('settling');
-  act(() => sceneProps.current?.onSettleFinished());
-  expect(screen.getByLabelText('Comment')).toHaveValue('');
+  // full3d has no scene callback for leaving 'settling' — the scene never
+  // calls back in, the 1200ms safety timer in app.tsx is the only way out.
+  await waitFor(
+    () => expect(screen.getByLabelText('Comment')).toHaveValue(''),
+    { timeout: 2000 },
+  );
   expect(screen.getByLabelText('Name')).toHaveValue('');
 });
 
