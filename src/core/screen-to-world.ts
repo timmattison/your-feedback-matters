@@ -15,7 +15,7 @@ export interface WorldRect {
 }
 
 export function visibleWorldHeight(cam: CameraSpec): number {
-  return 0;
+  return 2 * cam.distance * Math.tan((cam.fovDeg * Math.PI) / 360);
 }
 
 export function domRectToWorld(
@@ -23,5 +23,16 @@ export function domRectToWorld(
   viewport: Viewport,
   cam: CameraSpec,
 ): WorldRect {
-  return { width: 0, height: 0, center: [0, 0, 0] };
+  const worldPerPixel = visibleWorldHeight(cam) / viewport.height;
+  const cxPx = rect.left + rect.width / 2;
+  const cyPx = rect.top + rect.height / 2;
+  return {
+    width: rect.width * worldPerPixel,
+    height: rect.height * worldPerPixel,
+    center: [
+      (cxPx - viewport.width / 2) * worldPerPixel,
+      (viewport.height / 2 - cyPx) * worldPerPixel,
+      0,
+    ],
+  };
 }
