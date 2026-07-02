@@ -39,6 +39,14 @@ function lerp(a: number, b: number, k: number): number {
   return a + (b - a) * k;
 }
 
+// Shared crumple easing (easeInOutCubic). The forward crumple in
+// `scene/crumpling-paper.tsx` drives progress through this curve, and the
+// inspect un-/re-crumple (`core/inspect-crumple.ts`) reuses the very same curve
+// so fishing a wad out is provably the exact reverse of wadding it up.
+export function easeInOutCubic(x: number): number {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
 export function createCrumpleField(
   seed: number,
   width: number,

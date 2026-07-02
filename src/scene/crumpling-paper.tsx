@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { CrumpleField } from '../core/crumple';
+import { easeInOutCubic, type CrumpleField } from '../core/crumple';
 import type { WorldRect } from '../core/screen-to-world';
 import { CRUMPLE_DURATION_S, MESH_SEGMENTS } from '../core/constants';
 
@@ -10,10 +10,6 @@ export interface CrumplingPaperProps {
   worldRect: WorldRect;
   snapshotUrl: string | null;
   onCrumpleFinished(geometry: THREE.BufferGeometry): void;
-}
-
-function easeInOutCubic(x: number): number {
-  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 }
 
 export function CrumplingPaper({
