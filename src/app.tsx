@@ -61,7 +61,7 @@ export function App({ mode }: AppProps = {}) {
     if (node === null) {
       // No form to snapshot or crumple (should be unreachable — the form
       // is always mounted while phase is 'capturing'). The 3D scene only
-      // mounts CrumplingPaper/TossedBall once formRect is set, so leaving
+      // mounts CrumplingPaper/PaperBall once formRect is set, so leaving
       // this at just CAPTURED would strand the machine in 'crumpling'
       // forever with no CRUMPLE_FINISHED ever firing. Walk the whole chain
       // by hand instead; the settling timer below takes it home from there.

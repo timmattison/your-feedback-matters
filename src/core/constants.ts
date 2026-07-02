@@ -13,3 +13,17 @@ export const BASKET_HEIGHT = 2.5;
 export const SETTLE_TIMEOUT_MS = 3500;
 export const REST_SPEED_THRESHOLD = 0.15;
 export const MISS_PROBABILITY = 0.25;
+
+// A resting paper counts as "in the basket" (and piles up) within this radius
+// of the basket axis; beyond it the paper has fallen out and is removed.
+// Slightly wider than the rim so a ball that settles right against the inner
+// wall isn't culled.
+export const PILE_IN_RADIUS = BASKET_RADIUS + 0.2;
+
+// When the basket slides in/out, each resting paper gets a random kick so the
+// pile jostles and the occasional one hops the rim and tumbles out. JOLT_UP is
+// the peak upward speed (m/s), JOLT_SIDE the peak sideways speed, JOLT_SPIN the
+// peak tumble. Tuned so most papers resettle and only a few go flying.
+export const JOLT_UP = 3.2;
+export const JOLT_SIDE = 2.2;
+export const JOLT_SPIN = 8;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Physics } from '@react-three/cannon';
 import * as THREE from 'three';
@@ -14,7 +14,7 @@ import {
   GRAVITY_Y,
 } from '../core/constants';
 import { CrumplingPaper } from './crumpling-paper';
-import { TossedBall } from './tossed-ball';
+import { PaperBall } from './paper-ball';
 import { Wastebasket } from './wastebasket';
 import { Ground } from './ground';
 
@@ -24,7 +24,8 @@ export interface CrumpleSceneProps {
    * Whether the basket should be on-screen. False on the closed landing, which
    * slides the whole scene overlay off to the right; true once the form opens,
    * sliding it back in. The scene stays mounted either way so the transition
-   * (see `.scene-overlay` in scene.css) can animate.
+   * (see `.scene-overlay` in scene.css) can animate — and so the pile of tossed
+   * paper survives the closed↔open cycle. Each flip also kicks the pile.
    */
   visible: boolean;
   snapshotUrl: string | null;
@@ -36,22 +37,35 @@ export interface CrumpleSceneProps {
 
 const CAMERA = { fovDeg: CAMERA_FOV_DEG, distance: CAMERA_DISTANCE };
 
+// A single crumpled paper living in the scene. Persists across tosses (made
+// shots pile up) until it falls out of the basket and is removed.
+interface PileEntry {
+  id: number;
+  geometry: THREE.BufferGeometry;
+  snapshotUrl: string | null;
+  startPosition: [number, number, number];
+  ballRadius: number;
+  seed: number;
+}
+
 function SceneContents(props: CrumpleSceneProps) {
   const { size } = useThree();
   const worldH = visibleWorldHeight(CAMERA);
   const worldW = worldH * (size.width / size.height);
 
   // basket sits bottom-right, mouth opening upward
-  const basketBase: [number, number, number] = [
-    worldW / 2 - BASKET_RADIUS * 2.2,
-    -worldH / 2 + 0.15,
-    0,
-  ];
-  const basketMouth = {
-    x: basketBase[0],
-    y: basketBase[1] + BASKET_HEIGHT,
-    z: basketBase[2],
-  };
+  const basketBase = useMemo<[number, number, number]>(
+    () => [worldW / 2 - BASKET_RADIUS * 2.2, -worldH / 2 + 0.15, 0],
+    [worldW, worldH],
+  );
+  const basketMouth = useMemo(
+    () => ({
+      x: basketBase[0],
+      y: basketBase[1] + BASKET_HEIGHT,
+      z: basketBase[2],
+    }),
+    [basketBase],
+  );
 
   const worldRect = useMemo(
     () =>
@@ -73,19 +87,26 @@ function SceneContents(props: CrumpleSceneProps) {
     [props.tossSeed, worldRect],
   );
 
-  const [crumpledGeometry, setCrumpledGeometry] =
-    useState<THREE.BufferGeometry | null>(null);
+  // The pile: every crumpled ball ever tossed that hasn't fallen out. It lives
+  // in state here (SceneContents never unmounts while in full3d), so paper
+  // accumulates across the closed↔open cycle and new tosses land on the stack.
+  const [pile, setPile] = useState<PileEntry[]>([]);
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const nextId = useRef(0);
 
-  // crumpledGeometry is a clone() handed off each round (see
-  // crumpling-paper.tsx); it's created imperatively rather than via JSX, so
-  // R3F won't auto-dispose it. Free the previous round's GPU buffers when a
-  // new one arrives or this scene unmounts, mirroring the texture-disposal
-  // pattern used elsewhere in this codebase.
+  const removeBall = useCallback((id: number) => {
+    setPile((current) => current.filter((entry) => entry.id !== id));
+  }, []);
+
+  // Bump a nonce whenever the basket slides (visible flips), which each resting
+  // ball turns into a kick. Skip the initial mount — only actual slides jolt.
+  const [joltNonce, setJoltNonce] = useState(0);
+  const lastVisible = useRef(props.visible);
   useEffect(() => {
-    return () => {
-      crumpledGeometry?.dispose();
-    };
-  }, [crumpledGeometry]);
+    if (lastVisible.current === props.visible) return;
+    lastVisible.current = props.visible;
+    setJoltNonce((n) => n + 1);
+  }, [props.visible]);
 
   return (
     <>
@@ -106,26 +127,39 @@ function SceneContents(props: CrumpleSceneProps) {
               worldRect={worldRect}
               snapshotUrl={props.snapshotUrl}
               onCrumpleFinished={(geometry) => {
-                setCrumpledGeometry(geometry);
+                const id = nextId.current++;
+                setPile((current) => [
+                  ...current,
+                  {
+                    id,
+                    geometry,
+                    snapshotUrl: props.snapshotUrl,
+                    startPosition: worldRect.center,
+                    ballRadius: field.ballRadius,
+                    seed: props.tossSeed,
+                  },
+                ]);
+                setActiveId(id);
                 props.onCrumpleFinished();
               }}
             />
           )}
-        {(props.phase === 'tossing' || props.phase === 'settling') &&
-          crumpledGeometry !== null &&
-          field !== null &&
-          worldRect !== null && (
-            <TossedBall
-              geometry={crumpledGeometry}
-              snapshotUrl={props.snapshotUrl}
-              startPosition={worldRect.center}
-              ballRadius={field.ballRadius}
-              seed={props.tossSeed}
-              basketMouth={basketMouth}
-              fading={props.phase === 'settling'}
-              onRested={props.onBallRested}
-            />
-          )}
+        {pile.map((entry) => (
+          <PaperBall
+            key={entry.id}
+            geometry={entry.geometry}
+            snapshotUrl={entry.snapshotUrl}
+            startPosition={entry.startPosition}
+            ballRadius={entry.ballRadius}
+            seed={entry.seed}
+            basketMouth={basketMouth}
+            basketBase={basketBase}
+            isActive={entry.id === activeId}
+            joltNonce={joltNonce}
+            onRested={props.onBallRested}
+            onFellOut={() => removeBall(entry.id)}
+          />
+        ))}
       </Physics>
     </>
   );
