@@ -23,5 +23,20 @@ export function inspectReducer(
   state: InspectState,
   event: InspectEvent,
 ): InspectState {
-  return state;
+  switch (event.type) {
+    case 'INSPECT':
+      return state.phase === 'browsing'
+        ? { phase: 'opening', noteId: event.noteId }
+        : state;
+    case 'OPEN_DONE':
+      return state.phase === 'opening' ? { ...state, phase: 'open' } : state;
+    case 'DISMISS':
+      return state.phase === 'open' ? { ...state, phase: 'closing' } : state;
+    case 'CLOSE_DONE':
+      return state.phase === 'closing'
+        ? { phase: 'browsing', noteId: null }
+        : state;
+    default:
+      return state;
+  }
 }
