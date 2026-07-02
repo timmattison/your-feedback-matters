@@ -1,0 +1,13 @@
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* R3F sets pointer-events: auto inline on its container and canvas for its own
+   event system, which would swallow every click on the page. The scene never
+   needs pointer input, so force the whole subtree inert. */
+.scene-overlay * {
+  pointer-events: none !important;
+}

@@ -1,0 +1,5 @@
+pnpm exec lint-staged
+pnpm exec prettier --check "src/**/*.{ts,tsx,css}"
+pnpm exec oxlint --deny-warnings src
+pnpm exec tsc -b
+pnpm exec vitest run
