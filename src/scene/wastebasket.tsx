@@ -7,7 +7,7 @@ import {
 } from '../core/constants';
 import {
   basketRadiusAtHeightFraction,
-  basketWallSlant,
+  basketWallElement,
 } from '../core/basket-geometry';
 
 // Physics: a sealed ring of thin static boxes standing in for the wall, plus a
@@ -45,18 +45,26 @@ const STEEL_BRIGHT = {
 const FLAT_RING: [number, number, number] = [Math.PI / 2, 0, 0];
 
 /**
- * Placement of a full-height wall element (a rib or a physics segment) at the
- * given azimuth. The element spans floor to mouth along the taper, so it sits at
- * the mid-height radius and leans outward: its bottom reaches
- * BASKET_BOTTOM_RADIUS and its top reaches BASKET_RADIUS. The quaternion aligns
- * the element's local +Y (its length) with the slant while keeping its width
- * tangential and its thin face radial.
+ * Placement of a wall element (a rib or a physics segment) at the given azimuth,
+ * spanning height fractions `f0`..`f1` of the taper. The element sits at the
+ * mid-height radius and leans outward along the wall — the full-height span
+ * (`f0 = 0`, `f1 = 1`) reaches BASKET_BOTTOM_RADIUS at the floor and
+ * BASKET_RADIUS at the mouth. The quaternion aligns the element's local +Y (its
+ * length) with the slant while keeping its width tangential and its thin face
+ * radial. Ribs start at the foot ring (`f0 > 0`) so they stop at the bottom ring
+ * instead of poking through it; the returned `length` is theirs to use.
  */
-function slantTransform(angle: number): {
+function slantTransform(
+  angle: number,
+  f0 = 0,
+  f1 = 1,
+): {
   position: [number, number, number];
   quaternion: [number, number, number, number];
+  length: number;
 } {
-  const midRadius = basketRadiusAtHeightFraction(0.5);
+  const { centerHeight, length } = basketWallElement(f0, f1);
+  const midRadius = basketRadiusAtHeightFraction((f0 + f1) / 2);
   const run = BASKET_RADIUS - BASKET_BOTTOM_RADIUS;
   const tangential = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle));
   const along = new THREE.Vector3(
@@ -73,10 +81,11 @@ function slantTransform(angle: number): {
   return {
     position: [
       Math.cos(angle) * midRadius,
-      BASKET_HEIGHT / 2,
+      centerHeight,
       Math.sin(angle) * midRadius,
     ],
     quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
+    length,
   };
 }
 
@@ -90,8 +99,8 @@ function WallSegment({
 }) {
   const angle = (index / WALL_SEGMENTS) * Math.PI * 2;
   const segmentWidth = (2 * Math.PI * BASKET_RADIUS) / WALL_SEGMENTS;
-  const { length } = basketWallSlant();
-  const { position, quaternion } = slantTransform(angle);
+  // full height (floor to mouth) so the wall stays sealed at the very bottom
+  const { position, quaternion, length } = slantTransform(angle);
   useBox(() => ({
     type: 'Static',
     args: [segmentWidth * 1.1, length, 0.05],
@@ -107,7 +116,6 @@ function WallSegment({
 
 /** The shaded, solid wire-mesh basket the user actually sees. */
 function BasketFrame({ base }: { base: [number, number, number] }) {
-  const { length: ribLength } = basketWallSlant();
   const footRadius = basketRadiusAtHeightFraction(FOOT_FRACTION);
   return (
     <group position={base}>
@@ -122,13 +130,19 @@ function BasketFrame({ base }: { base: [number, number, number] }) {
         <meshStandardMaterial {...STEEL} />
       </mesh>
 
-      {/* slanted vertical ribs, wider at the mouth than at the floor */}
+      {/* slanted vertical ribs, wider at the mouth than at the floor. They
+          start at the foot ring (FOOT_FRACTION) rather than the very bottom so
+          their lower ends tuck into that ring instead of poking through it. */}
       {Array.from({ length: VERTICAL_RIBS }, (_, i) => {
         const angle = (i / VERTICAL_RIBS) * Math.PI * 2;
-        const { position, quaternion } = slantTransform(angle);
+        const { position, quaternion, length } = slantTransform(
+          angle,
+          FOOT_FRACTION,
+          1,
+        );
         return (
           <mesh key={`rib-${i}`} position={position} quaternion={quaternion}>
-            <cylinderGeometry args={[RIB_RADIUS, RIB_RADIUS, ribLength, 8]} />
+            <cylinderGeometry args={[RIB_RADIUS, RIB_RADIUS, length, 8]} />
             <meshStandardMaterial {...STEEL} />
           </mesh>
         );
