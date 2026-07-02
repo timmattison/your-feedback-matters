@@ -14,6 +14,7 @@ import {
 } from '../core/constants';
 import { CrumplingPaper } from './crumpling-paper';
 import { Wastebasket } from './wastebasket';
+import { Ground } from './ground';
 
 export interface CrumpleSceneProps {
   phase: Phase;
@@ -66,6 +67,7 @@ function SceneContents(props: CrumpleSceneProps) {
       <ambientLight intensity={0.9} />
       <directionalLight position={[4, 6, 8]} intensity={1.4} />
       <Physics gravity={[0, GRAVITY_Y, 0]}>
+        <Ground y={-worldH / 2 + 0.1} />
         <Wastebasket base={basketBase} />
         {props.phase === 'crumpling' &&
           field !== null &&
