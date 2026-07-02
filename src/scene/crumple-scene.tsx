@@ -36,6 +36,12 @@ export interface CrumpleSceneProps {
   formRect: DOMRect | null;
   onCrumpleFinished(): void;
   onBallRested(): void;
+  /**
+   * Called with true while a fished-out note is being inspected (opening/open),
+   * false once back to browsing — the app marks the DOM form `inert` so it can't
+   * be typed into behind the scrim.
+   */
+  onInspectingChange(inspecting: boolean): void;
 }
 
 const CAMERA = { fovDeg: CAMERA_FOV_DEG, distance: CAMERA_DISTANCE };

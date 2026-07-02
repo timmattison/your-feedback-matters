@@ -167,6 +167,7 @@ export function App({ mode }: AppProps = {}) {
           formRect={formRect}
           onCrumpleFinished={() => dispatch({ type: 'CRUMPLE_FINISHED' })}
           onBallRested={() => dispatch({ type: 'BALL_RESTED' })}
+          onInspectingChange={() => {}}
         />
       )}
       {state.phase !== 'closed' && (

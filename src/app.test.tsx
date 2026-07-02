@@ -219,6 +219,21 @@ test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on a
   expect(screen.getByLabelText('Comment')).toHaveValue('');
 });
 
+test('the form goes inert while a note is inspected and is typeable again after dismiss', async () => {
+  const user = userEvent.setup();
+  render(<App mode="full3d" />);
+  await openForm(user);
+  // grab the ref BEFORE inert removes it from the a11y tree
+  const form = screen.getByRole('form', { name: 'Feedback form' });
+  expect(form).not.toHaveAttribute('inert');
+
+  act(() => sceneProps.current?.onInspectingChange(true));
+  expect(form).toHaveAttribute('inert');
+
+  act(() => sceneProps.current?.onInspectingChange(false));
+  expect(form).not.toHaveAttribute('inert');
+});
+
 test('css mode ignores animationend from other animations (e.g. a bubbled shake)', async () => {
   const user = userEvent.setup();
   render(<App mode="css" />);
