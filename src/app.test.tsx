@@ -15,6 +15,12 @@ vi.mock('html-to-image', () => ({
   toPng: vi.fn(async () => 'data:image/png;base64,fake'),
 }));
 
+// three/@react-three/fiber cannot render in jsdom; the scene is verified
+// visually (see task-8-brief Step 5), not in this suite.
+vi.mock('./scene/crumple-scene', () => ({
+  CrumpleScene: () => null,
+}));
+
 test('footer shows the Powered by badge linking to the repo', () => {
   render(<App />);
   const link = screen.getByRole('link', { name: POWERED_BY_TEXT });
