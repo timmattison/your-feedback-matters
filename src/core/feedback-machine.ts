@@ -30,8 +30,11 @@ export type FeedbackEvent =
 
 import { BLANK_FEEDBACK_MESSAGE } from './copy';
 
+// The app lands closed: a "Got feedback?" button, no form, and the basket
+// slid off-screen. OPEN summons the form (and slides the basket in); CANCEL
+// and a completed toss (SETTLE_FINISHED, via this same shape) return here.
 export const initialState: FeedbackState = {
-  phase: 'idle',
+  phase: 'closed',
   fields: { name: '', comment: '' },
   errorMessage: null,
   tossSeed: 0,

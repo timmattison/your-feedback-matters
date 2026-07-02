@@ -6,6 +6,9 @@
 
 body {
   margin: 0;
+  /* The basket scene parks off the right edge while closed (translateX in
+     scene.css); clip it so that never adds a horizontal scrollbar. */
+  overflow-x: hidden;
   font-family:
     system-ui,
     -apple-system,

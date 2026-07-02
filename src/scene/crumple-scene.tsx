@@ -20,6 +20,13 @@ import { Ground } from './ground';
 
 export interface CrumpleSceneProps {
   phase: Phase;
+  /**
+   * Whether the basket should be on-screen. False on the closed landing, which
+   * slides the whole scene overlay off to the right; true once the form opens,
+   * sliding it back in. The scene stays mounted either way so the transition
+   * (see `.scene-overlay` in scene.css) can animate.
+   */
+  visible: boolean;
   snapshotUrl: string | null;
   tossSeed: number;
   formRect: DOMRect | null;
@@ -126,7 +133,9 @@ function SceneContents(props: CrumpleSceneProps) {
 
 export function CrumpleScene(props: CrumpleSceneProps) {
   return (
-    <div className="scene-overlay">
+    <div
+      className={`scene-overlay${props.visible ? '' : ' scene-overlay--hidden'}`}
+    >
       <Canvas
         gl={{ alpha: true }}
         camera={{ fov: CAMERA_FOV_DEG, position: [0, 0, CAMERA_DISTANCE] }}

@@ -6,10 +6,16 @@ import {
 } from './feedback-machine';
 import { BLANK_FEEDBACK_MESSAGE } from './copy';
 
+// An open, filled-in form — the starting point for the toss/cancel paths.
+// (initialState is now 'closed', so the phase must be set explicitly.)
 const filled: FeedbackState = {
   ...initialState,
+  phase: 'idle',
   fields: { name: 'Tim', comment: 'Needs more cowbell' },
 };
+
+// An open, still-blank form — the starting point for the blank-toss error path.
+const blankOpen: FeedbackState = { ...initialState, phase: 'idle' };
 
 test('starts closed on the "Got feedback?" landing, with empty fields', () => {
   expect(initialState.phase).toBe('closed');
@@ -35,7 +41,7 @@ test('OPEN reopens a closed form', () => {
 });
 
 test('blank toss goes to error with the scolding message', () => {
-  const next = feedbackReducer(initialState, {
+  const next = feedbackReducer(blankOpen, {
     type: 'TOSS_REQUESTED',
     seed: 5,
   });
@@ -44,7 +50,7 @@ test('blank toss goes to error with the scolding message', () => {
 });
 
 test('SHAKE_ENDED returns to idle but keeps the message until an edit', () => {
-  const errored = feedbackReducer(initialState, {
+  const errored = feedbackReducer(blankOpen, {
     type: 'TOSS_REQUESTED',
     seed: 5,
   });
@@ -60,7 +66,7 @@ test('SHAKE_ENDED returns to idle but keeps the message until an edit', () => {
   expect(edited.fields.comment).toBe('x');
 });
 
-test('filled toss walks capturing → crumpling → tossing → settling → fresh idle', () => {
+test('filled toss walks capturing → crumpling → tossing → settling → closed landing', () => {
   let s = feedbackReducer(filled, { type: 'TOSS_REQUESTED', seed: 99 });
   expect(s.phase).toBe('capturing');
   expect(s.tossSeed).toBe(99);
@@ -75,7 +81,7 @@ test('filled toss walks capturing → crumpling → tossing → settling → fre
   s = feedbackReducer(s, { type: 'BALL_RESTED' });
   expect(s.phase).toBe('settling');
   s = feedbackReducer(s, { type: 'SETTLE_FINISHED' });
-  expect(s.phase).toBe('idle');
+  expect(s.phase).toBe('closed');
   expect(s.fields).toEqual({ name: '', comment: '' });
   expect(s.snapshotUrl).toBeNull();
 });
@@ -92,5 +98,7 @@ test('events in the wrong phase are ignored', () => {
   expect(feedbackReducer(initialState, { type: 'CRUMPLE_FINISHED' })).toBe(
     initialState,
   );
-  expect(feedbackReducer(initialState, { type: 'OPEN' })).toBe(initialState);
+  // OPEN only means something while closed; from an open form it's a no-op.
+  const idle: FeedbackState = { ...initialState, phase: 'idle' };
+  expect(feedbackReducer(idle, { type: 'OPEN' })).toBe(idle);
 });

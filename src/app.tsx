@@ -161,6 +161,7 @@ export function App({ mode }: AppProps = {}) {
       {resolvedMode === 'full3d' && (
         <CrumpleScene
           phase={state.phase}
+          visible={state.phase !== 'closed'}
           snapshotUrl={state.snapshotUrl}
           tossSeed={state.tossSeed}
           formRect={formRect}

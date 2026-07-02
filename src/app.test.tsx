@@ -34,6 +34,12 @@ vi.mock('./scene/crumple-scene', () => ({
   },
 }));
 
+// The app now lands on the closed "Got feedback?" button; every form-driven
+// path starts by clicking through to the open form.
+async function openForm(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
+}
+
 test('footer shows the Powered by badge linking to the repo', () => {
   render(<App />);
   const link = screen.getByRole('link', { name: POWERED_BY_TEXT });
@@ -87,6 +93,7 @@ test('the basket is slid out on the landing, slides in on open, and back out on 
 test('cancel closes the form immediately and clears the fields', async () => {
   const user = userEvent.setup();
   render(<App />);
+  await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
   await user.click(screen.getByRole('button', { name: CANCEL_BUTTON_LABEL }));
@@ -99,6 +106,7 @@ test('cancel closes the form immediately and clears the fields', async () => {
 test('blank toss shakes the form and shows the scolding in red', async () => {
   const user = userEvent.setup();
   render(<App />);
+  await openForm(user);
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   const alert = screen.getByRole('alert');
   expect(alert).toHaveTextContent(BLANK_FEEDBACK_MESSAGE);
@@ -110,6 +118,7 @@ test('blank toss shakes the form and shows the scolding in red', async () => {
 test('editing a field clears the scolding', async () => {
   const user = userEvent.setup();
   render(<App />);
+  await openForm(user);
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   await user.type(screen.getByLabelText('Comment'), 'x');
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -118,6 +127,7 @@ test('editing a field clears the scolding', async () => {
 test('a filled toss captures the form and hides it for the crumple', async () => {
   const user = userEvent.setup();
   render(<App mode="full3d" />);
+  await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -130,30 +140,11 @@ test('a filled toss captures the form and hides it for the crumple', async () =>
   ).toBeNull();
 });
 
-test('after the toss settles, a fresh empty form is ready for another round', async () => {
-  const user = userEvent.setup();
-  render(<App mode="full3d" />);
-  await user.type(screen.getByLabelText('Name'), 'Tim');
-  await user.type(screen.getByLabelText('Comment'), 'straight to the bin');
-  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
-  await waitFor(() => expect(sceneProps.current?.phase).toBe('crumpling'));
-  act(() => sceneProps.current?.onCrumpleFinished());
-  expect(sceneProps.current?.phase).toBe('tossing');
-  act(() => sceneProps.current?.onBallRested());
-  expect(sceneProps.current?.phase).toBe('settling');
-  // full3d has no scene callback for leaving 'settling' — the scene never
-  // calls back in, the 1200ms safety timer in app.tsx is the only way out.
-  await waitFor(
-    () => expect(screen.getByLabelText('Comment')).toHaveValue(''),
-    { timeout: 2000 },
-  );
-  expect(screen.getByLabelText('Name')).toHaveValue('');
-});
-
 test('a failed snapshot capture still advances instead of sticking in capturing', async () => {
   const user = userEvent.setup();
   vi.mocked(toPng).mockRejectedValueOnce(new Error('capture failed'));
   render(<App mode="full3d" />);
+  await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -170,10 +161,19 @@ test('reduced-motion (instant) mode tosses without any 3D scene and resets quick
   sceneProps.current = null;
   const user = userEvent.setup();
   render(<App mode="instant" />);
+  await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'no motion please');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
-  await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue(''));
+  // resets straight back to the closed "Got feedback?" landing
+  await waitFor(() =>
+    expect(
+      screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }),
+    ).toBeInTheDocument(),
+  );
+  expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+  // reopening yields a fresh, empty form
+  await openForm(user);
   expect(screen.getByLabelText('Comment')).toHaveValue('');
   // the scene component was never mounted, so it never touched sceneProps
   expect(sceneProps.current).toBeNull();
@@ -183,6 +183,7 @@ test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on a
   sceneProps.current = null;
   const user = userEvent.setup();
   render(<App mode="css" />);
+  await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'no webgl here');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -197,6 +198,11 @@ test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on a
       animationName: 'css-toss',
     });
   });
+  // toss done → back to the closed landing; reopening is empty
+  expect(
+    screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }),
+  ).toBeInTheDocument();
+  await openForm(user);
   expect(screen.getByLabelText('Name')).toHaveValue('');
   expect(screen.getByLabelText('Comment')).toHaveValue('');
 });
@@ -204,6 +210,7 @@ test('no-WebGL (css) mode plays a CSS toss animation on the form and resets on a
 test('css mode ignores animationend from other animations (e.g. a bubbled shake)', async () => {
   const user = userEvent.setup();
   render(<App mode="css" />);
+  await openForm(user);
   await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'no webgl here');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
@@ -221,10 +228,14 @@ test('css mode ignores animationend from other animations (e.g. a bubbled shake)
   expect(screen.getByLabelText('Name')).toHaveValue('Tim');
   expect(wrapper).toHaveClass('css-toss');
 
-  // ...and the real css-toss completion still resets the form.
+  // ...and the real css-toss completion still resets to the closed landing.
   act(() => {
     fireEvent.animationEnd(wrapper, { animationName: 'css-toss' });
   });
+  expect(
+    screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }),
+  ).toBeInTheDocument();
+  await openForm(user);
   expect(screen.getByLabelText('Name')).toHaveValue('');
   expect(screen.getByLabelText('Comment')).toHaveValue('');
 });

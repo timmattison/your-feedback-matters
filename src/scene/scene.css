@@ -3,6 +3,25 @@
   inset: 0;
   z-index: 10;
   pointer-events: none;
+  /* The basket sits bottom-right; slide the whole (transparent) overlay in
+     from off the right edge. Slide-IN uses easeOutExpo — a fast launch that
+     decelerates into place, "smooth but fast". */
+  transform: translateX(0);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* Closed landing: parked off-screen right. Slide-OUT uses easeInExpo so the
+   basket accelerates away rather than crawling off. */
+.scene-overlay--hidden {
+  transform: translateX(100%);
+  transition: transform 0.5s cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-overlay {
+    transition: none;
+  }
 }
 
 /* R3F sets pointer-events: auto inline on its container and canvas for its own
