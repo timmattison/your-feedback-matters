@@ -159,6 +159,13 @@ land on the stack.
   right and not in the dead pause after the curve's long tail.
 - **Unbounded** — the pile grows without a cap (an accepted trade-off);
   each ball frees its geometry/texture/material on removal or unmount.
+- **Fish it back out** — click a resting wad and it un-crumples (~95% flat)
+  and flies up to the form's old screen spot behind a dimmed scrim, so you can
+  re-read what you wrote. Click anywhere and it re-crumples in place and is
+  thrown back into the basket by the same physics path (settle or rim-out) — it
+  is never editable and never becomes DOM. See
+  [`specs/2026-07-02-inspect-piled-note-design.md`](./2026-07-02-inspect-piled-note-design.md)
+  for the picking, un-crumple/re-crumple, and state-machine details.
 
 ## Error Handling & Degradation
 

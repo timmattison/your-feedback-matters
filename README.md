@@ -11,7 +11,13 @@ Made shots **stay** — the paper piles up in the basket across submissions,
 and only the ones that miss (or later get knocked out) actually disappear.
 When the basket slides back out and in, the pile gets jostled, so every now
 and then a wad hops the rim and goes flying. After each toss you're returned
-to the **"Got feedback?"** landing. That's the whole product. That's the joke.
+to the **"Got feedback?"** landing. Click any wad that made it into the basket
+and you can fish it back out: the scene and form dim behind a dark scrim, that
+note un-crumples and floats up to where the form used to be so you can re-read
+what you wrote. Click anywhere and it re-crumples on the spot and gets thrown
+straight back into the bin. It's read-only the whole time — the note never
+becomes editable and nothing you typed is ever stored. That's the whole
+product. That's the joke.
 
 Leave a field blank and hit toss anyway, and the form shakes and scolds you
 in red: _"Be serious, there's nothing we can do if your feedback is
@@ -62,6 +68,23 @@ settling → closed`, see `src/core/feedback-machine.ts`). The app lands in
    easeOutExpo curve parks the basket before its nominal end — so the papers fly
    the moment it settles rather than in the dead pause after. The form then
    resets for another round.
+6. **Fish it back out.** Click a resting wad in the basket and you can pull it
+   back up to re-read it. Picking is a pure DOM screen-space hit-test — every
+   resting wad's world pose is projected to a screen rect (`worldPointToScreen`
+   in `src/core/screen-to-world.ts`) and the click is matched against those
+   rects (`pickBallAt`, `src/core/pick-ball.ts`); the R3F canvas never
+   raycasts. The picked note then un-crumples to ~95% flat and flies up to the
+   form's old screen spot behind a dimmed scrim, replaying the crumple's own
+   eased field backward (`openingT`/`closingT` in `src/core/inspect-crumple.ts`,
+   driven each frame by `src/scene/inspected-note.tsx` — a script-driven plane,
+   not a physics body). Click anywhere to dismiss: it re-crumples in place and
+   is handed straight back to the normal physics toss, so it can settle back
+   into the pile or rim out and be culled by the same rule. The whole
+   interaction runs on its own little state machine
+   (`browsing → opening → open → closing → browsing`,
+   `src/core/inspect-machine.ts`), the note stays a read-only snapshot plane the
+   entire time (never editable, never DOM), and the DOM form is marked `inert`
+   while a note is open.
 
 ### Fallbacks
 
@@ -104,9 +127,11 @@ pnpm test      # run the test suite (vitest run)
 pnpm build     # tsc -b && vite build → dist/
 ```
 
-77 tests currently cover every pure module in `src/core/` plus the app's
+113 tests currently cover every pure module in `src/core/` plus the app's
 phase-transition wiring end to end (blank scold, cancel/reopen, capture →
-crumple → toss → settle → reset, and both fallback modes).
+crumple → toss → settle → reset, both fallback modes, and the fish-it-back-out
+pile-inspect logic — screen-space picking, un-crumple/re-crumple mapping, and
+the inspect state machine).
 
 ## Architecture
 
@@ -119,7 +144,17 @@ src/
     feedback-machine.ts    the form's phase state machine + reducer
     crumple.ts             procedural fold/contract/lump math → CrumpleField
     toss.ts                ballistic velocity/spin solver, rim-miss logic
-    screen-to-world.ts     maps the form's DOM rect into R3F world space
+    screen-to-world.ts     maps the form's DOM rect into R3F world space,
+                            and projects world points/radii back to screen
+                            (worldPointToScreen) so resting wads can be picked
+    pick-ball.ts           pure screen-space hit-test: which resting wad, if
+                            any, a click landed on (basketScreenRect + pickBallAt)
+    inspect-machine.ts     the fish-it-back-out phase machine + reducer
+                            (browsing → opening → open → closing → browsing)
+    inspect-crumple.ts     progress → crumple-t mapping to un-crumple and
+                            re-crumple a picked note (openingT / closingT)
+    snapshot-filter.ts     strips the form's action buttons from the
+                            crumpled-paper snapshot (includeInSnapshot)
     animation-mode.ts      reduced-motion / no-WebGL / full3d selection
     constants.ts           physics & timing tuning knobs
     copy.ts                all user-facing strings, in one place
@@ -130,6 +165,9 @@ src/
     crumpling-paper.tsx    snapshot-textured plane, animated via CrumpleField
     paper-ball.tsx         one piled wad: planToss() flight, rest detection,
                             in/out classify, slide jolt, fade-and-cull
+    inspected-note.tsx     the fished-out note: a script-driven plane (not a
+                            physics body) that un-crumples and flies to the
+                            form spot, then re-crumples on dismiss
     wastebasket.tsx        wire-frame basket + compound collider
     ground.tsx             ground plane collider
 
@@ -149,6 +187,8 @@ reimplementing any of the math.
 
 - Design spec: [`specs/2026-07-01-crumple-feedback-form-design.md`](./specs/2026-07-01-crumple-feedback-form-design.md)
 - Implementation plan: [`plans/2026-07-01-crumple-feedback-form-plan.md`](./plans/2026-07-01-crumple-feedback-form-plan.md)
+- Fish-it-back-out design spec: [`specs/2026-07-02-inspect-piled-note-design.md`](./specs/2026-07-02-inspect-piled-note-design.md)
+- Fish-it-back-out implementation plan: [`plans/2026-07-02-inspect-piled-note-plan.md`](./plans/2026-07-02-inspect-piled-note-plan.md)
 - Ideas not yet built: [`WISHLIST.md`](./WISHLIST.md)
 
 ## Deploying
