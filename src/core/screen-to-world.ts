@@ -50,7 +50,11 @@ export function worldPointToScreen(
   viewport: Viewport,
   cam: CameraSpec,
 ): ScreenPoint {
-  return { x: 0, y: 0 };
+  const pixelsPerWorld = viewport.height / visibleWorldHeight(cam);
+  return {
+    x: point[0] * pixelsPerWorld + viewport.width / 2,
+    y: viewport.height / 2 - point[1] * pixelsPerWorld,
+  };
 }
 
 // Scale a world-space radius/length to its pixel size at the z = 0 plane. The exact
@@ -60,5 +64,6 @@ export function worldRadiusToScreen(
   viewport: Viewport,
   cam: CameraSpec,
 ): number {
-  return 0;
+  const pixelsPerWorld = viewport.height / visibleWorldHeight(cam);
+  return r * pixelsPerWorld;
 }

@@ -63,10 +63,9 @@ test('worldPointToScreen round-trips an off-center rect back to its center pixel
 });
 
 test('worldRadiusToScreen maps a full-height world span to the full viewport height', () => {
-  expect(worldRadiusToScreen(visibleWorldHeight(cam), viewport, cam)).toBeCloseTo(
-    viewport.height,
-    6,
-  );
+  expect(
+    worldRadiusToScreen(visibleWorldHeight(cam), viewport, cam),
+  ).toBeCloseTo(viewport.height, 6);
 });
 
 test('worldRadiusToScreen round-trips a rect height back to its pixel height', () => {
