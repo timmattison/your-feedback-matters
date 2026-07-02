@@ -69,6 +69,7 @@ export function YourFeedbackMatters({
   tossLabel = TOSS_BUTTON_LABEL,
   cancelLabel = CANCEL_BUTTON_LABEL,
   reopenLabel = REOPEN_BUTTON_LABEL,
+  blankMessage,
 }: YourFeedbackMattersProps = {}) {
   // Resolved once per mount so a mid-session change to the media query or
   // WebGL support doesn't yank the user between rendering strategies
@@ -194,6 +195,7 @@ export function YourFeedbackMatters({
         dispatch({
           type: 'TOSS_REQUESTED',
           seed: Math.floor(Math.random() * 2 ** 32),
+          blankMessage,
         })
       }
       onShakeEnd={() => dispatch({ type: 'SHAKE_ENDED' })}

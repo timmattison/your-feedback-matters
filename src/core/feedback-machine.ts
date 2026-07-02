@@ -20,7 +20,7 @@ export type FeedbackEvent =
   | { type: 'OPEN' }
   | { type: 'CANCEL' }
   | { type: 'FIELD_CHANGED'; field: string; value: string }
-  | { type: 'TOSS_REQUESTED'; seed: number }
+  | { type: 'TOSS_REQUESTED'; seed: number; blankMessage?: string }
   | { type: 'SHAKE_ENDED' }
   | { type: 'CAPTURED'; snapshotUrl: string | null }
   | { type: 'CRUMPLE_FINISHED' }
@@ -104,7 +104,11 @@ export function feedbackReducer(
     case 'TOSS_REQUESTED':
       if (state.phase !== 'idle' && state.phase !== 'error') return state;
       return isBlank(state.fields, state.requiredFields)
-        ? { ...state, phase: 'error', errorMessage: BLANK_FEEDBACK_MESSAGE }
+        ? {
+            ...state,
+            phase: 'error',
+            errorMessage: event.blankMessage ?? BLANK_FEEDBACK_MESSAGE,
+          }
         : {
             ...state,
             phase: 'capturing',
