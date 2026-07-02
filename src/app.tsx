@@ -169,9 +169,11 @@ export function App({ mode }: AppProps = {}) {
           onBallRested={() => dispatch({ type: 'BALL_RESTED' })}
         />
       )}
-      <footer className="powered-by">
-        <a href={REPO_URL}>{POWERED_BY_TEXT}</a>
-      </footer>
+      {state.phase !== 'closed' && (
+        <footer className="powered-by">
+          <a href={REPO_URL}>{POWERED_BY_TEXT}</a>
+        </footer>
+      )}
     </main>
   );
 }

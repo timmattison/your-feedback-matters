@@ -40,8 +40,10 @@ async function openForm(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
 }
 
-test('footer shows the Powered by badge linking to the repo', () => {
+test('footer shows the Powered by badge linking to the repo (once opened)', async () => {
+  const user = userEvent.setup();
   render(<App />);
+  await openForm(user);
   const link = screen.getByRole('link', { name: POWERED_BY_TEXT });
   expect(link).toHaveAttribute('href', REPO_URL);
 });

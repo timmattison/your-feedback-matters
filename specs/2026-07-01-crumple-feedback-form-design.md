@@ -139,8 +139,10 @@ Property tests (vitest, deterministic by seed):
 ## Footer Badge
 
 Fixed bottom-right: `Powered by Your Feedback Matters` linking to
-https://github.com/timmattison/your-feedback-matters. Always visible, above
-the canvas overlay.
+https://github.com/timmattison/your-feedback-matters. Rendered on a frosted
+pill (legible over the steel basket and in dark mode) and shown only once the
+form is open — it fades in with the basket and is hidden on the closed "Got
+feedback?" landing. Sits above the canvas overlay.
 
 ## Testing Strategy
 

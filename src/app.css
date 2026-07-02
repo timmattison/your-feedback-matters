@@ -20,6 +20,22 @@
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  /* Mounts only once the form is open (see App); fade it in so it arrives
+     with the basket rather than popping into the corner. */
+  animation: powered-by-fade-in 0.4s ease both;
+}
+@keyframes powered-by-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .powered-by {
+    animation: none;
+  }
 }
 .powered-by a {
   color: #23262b;
