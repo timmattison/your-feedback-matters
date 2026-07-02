@@ -32,6 +32,9 @@ export function App({ mode }: AppProps = {}) {
   const [state, dispatch] = useReducer(feedbackReducer, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const [formRect, setFormRect] = useState<DOMRect | null>(null);
+  // True while the 3D scene has a fished-out note in the lightbox. The DOM form
+  // is marked `inert` so it can't be typed into behind the scrim.
+  const [inspecting, setInspecting] = useState(false);
 
   // The fallback modes (css, instant) have no 3D scene to hand the form off
   // to, so they keep it mounted and visible through the whole toss,
@@ -121,6 +124,7 @@ export function App({ mode }: AppProps = {}) {
         })
       }
       onShakeEnd={() => dispatch({ type: 'SHAKE_ENDED' })}
+      inert={inspecting}
     />
   );
 
@@ -167,7 +171,7 @@ export function App({ mode }: AppProps = {}) {
           formRect={formRect}
           onCrumpleFinished={() => dispatch({ type: 'CRUMPLE_FINISHED' })}
           onBallRested={() => dispatch({ type: 'BALL_RESTED' })}
-          onInspectingChange={() => {}}
+          onInspectingChange={setInspecting}
         />
       )}
       {state.phase !== 'closed' && (
