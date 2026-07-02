@@ -37,6 +37,12 @@ export function App() {
     };
   }, [state.phase]);
 
+  useEffect(() => {
+    if (state.phase !== 'settling') return;
+    const id = setTimeout(() => dispatch({ type: 'SETTLE_FINISHED' }), 1200);
+    return () => clearTimeout(id);
+  }, [state.phase]);
+
   return (
     <main className="page">
       {formVisible && (

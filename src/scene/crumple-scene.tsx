@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Physics } from '@react-three/cannon';
+import * as THREE from 'three';
 import './scene.css';
 import type { Phase } from '../core/feedback-machine';
 import { createCrumpleField } from '../core/crumple';
@@ -13,6 +14,7 @@ import {
   GRAVITY_Y,
 } from '../core/constants';
 import { CrumplingPaper } from './crumpling-paper';
+import { TossedBall } from './tossed-ball';
 import { Wastebasket } from './wastebasket';
 import { Ground } from './ground';
 
@@ -62,6 +64,20 @@ function SceneContents(props: CrumpleSceneProps) {
     [props.tossSeed, worldRect],
   );
 
+  const [crumpledGeometry, setCrumpledGeometry] =
+    useState<THREE.BufferGeometry | null>(null);
+
+  // crumpledGeometry is a clone() handed off each round (see
+  // crumpling-paper.tsx); it's created imperatively rather than via JSX, so
+  // R3F won't auto-dispose it. Free the previous round's GPU buffers when a
+  // new one arrives or this scene unmounts, mirroring the texture-disposal
+  // pattern used elsewhere in this codebase.
+  useEffect(() => {
+    return () => {
+      crumpledGeometry?.dispose();
+    };
+  }, [crumpledGeometry]);
+
   return (
     <>
       <ambientLight intensity={0.9} />
@@ -76,12 +92,27 @@ function SceneContents(props: CrumpleSceneProps) {
               field={field}
               worldRect={worldRect}
               snapshotUrl={props.snapshotUrl}
-              onCrumpleFinished={props.onCrumpleFinished}
+              onCrumpleFinished={(geometry) => {
+                setCrumpledGeometry(geometry);
+                props.onCrumpleFinished();
+              }}
             />
           )}
-        {/* Task 10 renders <TossedBall> here for phases tossing/settling,
-            aimed at basketMouth */}
-        {void basketMouth}
+        {(props.phase === 'tossing' || props.phase === 'settling') &&
+          crumpledGeometry !== null &&
+          field !== null &&
+          worldRect !== null && (
+            <TossedBall
+              geometry={crumpledGeometry}
+              snapshotUrl={props.snapshotUrl}
+              startPosition={worldRect.center}
+              ballRadius={field.ballRadius}
+              seed={props.tossSeed}
+              basketMouth={basketMouth}
+              fading={props.phase === 'settling'}
+              onRested={props.onBallRested}
+            />
+          )}
       </Physics>
     </>
   );

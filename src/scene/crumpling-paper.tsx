@@ -9,7 +9,7 @@ export interface CrumplingPaperProps {
   field: CrumpleField;
   worldRect: WorldRect;
   snapshotUrl: string | null;
-  onCrumpleFinished(): void;
+  onCrumpleFinished(geometry: THREE.BufferGeometry): void;
 }
 
 function easeInOutCubic(x: number): number {
@@ -60,7 +60,7 @@ export function CrumplingPaper({
     geometry.computeVertexNormals();
     if (progress.current >= 1) {
       finished.current = true;
-      onCrumpleFinished();
+      onCrumpleFinished(geometry.clone());
     }
   });
 
