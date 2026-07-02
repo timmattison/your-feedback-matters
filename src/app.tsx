@@ -6,6 +6,7 @@ import { CrumpleScene } from './scene/crumple-scene';
 import { feedbackReducer, initialState } from './core/feedback-machine';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
 import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
+import { includeInSnapshot } from './core/snapshot-filter';
 
 // Class name and @keyframes name (src/app.css) for the css-mode toss.
 // The animationend handler keys on this exact animation name, so the class,
@@ -75,7 +76,7 @@ export function App({ mode }: AppProps = {}) {
     }
     setFormRect(node.getBoundingClientRect());
     let cancelled = false;
-    toPng(node)
+    toPng(node, { filter: includeInSnapshot })
       .then((url) => {
         if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: url });
       })
