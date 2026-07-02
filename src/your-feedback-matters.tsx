@@ -91,12 +91,19 @@ export function YourFeedbackMatters({
     typeof poweredBy === 'object' ? poweredBy.text : POWERED_BY_TEXT;
   const poweredByHref =
     typeof poweredBy === 'object' ? poweredBy.href : REPO_URL;
-  // Resolved once per mount so a mid-session change to the media query or
-  // WebGL support doesn't yank the user between rendering strategies
-  // mid-animation.
-  const [resolvedMode] = useState<AnimationMode>(
-    () => mode ?? detectAnimationMode(),
+  // Render a deterministic default on the server AND on the client's first
+  // (hydration) render so the two match, then upgrade to the environment's
+  // real mode once, after mount. detectAnimationMode() only runs in the effect,
+  // never during render, so `window` is never touched on the server — and a
+  // mid-session change to the media query or WebGL support can't yank the user
+  // between rendering strategies mid-animation (it's read exactly once).
+  const [resolvedMode, setResolvedMode] = useState<AnimationMode>(
+    () => mode ?? 'instant',
   );
+  useEffect(() => {
+    if (mode === undefined) setResolvedMode(detectAnimationMode());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
   // Read once at mount, like `mode`: the initial reducer state derives its
   // field keys and required set from this configuration.
   const [fieldConfigs] = useState<readonly FieldConfig[]>(
