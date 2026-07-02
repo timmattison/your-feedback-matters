@@ -18,13 +18,23 @@ Ideas that are out of scope for the current build but worth coming back to.
   independently tested; package the whole widget as a drop-in React
   component (`<YourFeedbackMatters onSubmit={...} />`) so other projects
   can embed "ceremonial delete" as a feedback UI.
-- **Record the README demo GIF** — `README.md` currently omits the demo
-  GIF because recording one requires a running dev server, which this
-  worktree's agent policy disallows. Record `docs/crumple-toss.gif`
-  manually (one make, one rim-out) and wire it into the README's
-  screenshot/demo section.
 - **Predecode/share the crumple texture** — avoid the decode flash at the
   form→paper and paper→ball handoff seams.
+- **Speed up / dress up the snapshot capture** — `html-to-image` takes
+  ~2–4 s on the first toss (font inlining), during which the form sits
+  visibly grayed. Options: pre-warm the capture pipeline on first
+  interaction, skip font embedding, or lean into it with a brief
+  "crumpling…" affordance.
+- **Brighten the paper at the swap seam** — the snapshot-textured plane
+  renders with a gray lighting tint next to the white page (standard
+  material + ACES tone mapping). Boost light intensity or use an unlit
+  material at t≈0 so the DOM→paper swap is truly seamless.
+- **Keep the basket fully inside wide viewports** — on very wide windows
+  the wire basket is partially clipped by the right edge (bonus: the
+  footer badge overlaps it). Same placement-clamp work as the mobile item.
+- **Improve the README GIF** — `docs/crumple-toss.gif` is a 6-frame
+  capture from browser automation; a smooth screen recording (one make,
+  one rim-out) would show the physics off properly.
 - **Clamp basket placement on narrow/mobile viewports** — it currently
   overlaps the form.
 - **Replace the reducer's `default:` case with a `never` exhaustiveness

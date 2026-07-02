@@ -13,7 +13,7 @@ blank"._ Hit **Cancel** and the form politely closes, replaced by a
 **"Got feedback?"** button to reopen it. Either way, nothing you type is
 ever sent, saved, logged, or read by anyone. There is no backend.
 
-> A demo GIF isn't checked in yet — see [`WISHLIST.md`](./WISHLIST.md).
+![A feedback form crumples into a paper ball and is tossed into a wire wastebasket](./docs/crumple-toss.gif)
 
 ## How it works
 
