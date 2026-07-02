@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { CrumpleField } from '../core/crumple';
@@ -32,6 +32,14 @@ export function CrumplingPaper({
     tex.colorSpace = THREE.SRGBColorSpace;
     return tex;
   }, [snapshotUrl]);
+
+  // R3F only auto-disposes objects it created from JSX; this texture is
+  // created imperatively, so free its GPU memory ourselves on unmount/change.
+  useEffect(() => {
+    return () => {
+      texture?.dispose();
+    };
+  }, [texture]);
 
   useFrame((_, delta) => {
     const mesh = meshRef.current;
