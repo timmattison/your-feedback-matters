@@ -35,13 +35,19 @@ test('OPEN reopens a closed form', () => {
 });
 
 test('blank toss goes to error with the scolding message', () => {
-  const next = feedbackReducer(initialState, { type: 'TOSS_REQUESTED', seed: 5 });
+  const next = feedbackReducer(initialState, {
+    type: 'TOSS_REQUESTED',
+    seed: 5,
+  });
   expect(next.phase).toBe('error');
   expect(next.errorMessage).toBe(BLANK_FEEDBACK_MESSAGE);
 });
 
 test('SHAKE_ENDED returns to idle but keeps the message until an edit', () => {
-  const errored = feedbackReducer(initialState, { type: 'TOSS_REQUESTED', seed: 5 });
+  const errored = feedbackReducer(initialState, {
+    type: 'TOSS_REQUESTED',
+    seed: 5,
+  });
   const calmed = feedbackReducer(errored, { type: 'SHAKE_ENDED' });
   expect(calmed.phase).toBe('idle');
   expect(calmed.errorMessage).toBe(BLANK_FEEDBACK_MESSAGE);
@@ -58,7 +64,10 @@ test('filled toss walks capturing → crumpling → tossing → settling → fre
   let s = feedbackReducer(filled, { type: 'TOSS_REQUESTED', seed: 99 });
   expect(s.phase).toBe('capturing');
   expect(s.tossSeed).toBe(99);
-  s = feedbackReducer(s, { type: 'CAPTURED', snapshotUrl: 'data:image/png;base64,x' });
+  s = feedbackReducer(s, {
+    type: 'CAPTURED',
+    snapshotUrl: 'data:image/png;base64,x',
+  });
   expect(s.phase).toBe('crumpling');
   expect(s.snapshotUrl).toBe('data:image/png;base64,x');
   s = feedbackReducer(s, { type: 'CRUMPLE_FINISHED' });
@@ -72,6 +81,8 @@ test('filled toss walks capturing → crumpling → tossing → settling → fre
 });
 
 test('events in the wrong phase are ignored', () => {
-  expect(feedbackReducer(initialState, { type: 'CRUMPLE_FINISHED' })).toBe(initialState);
+  expect(feedbackReducer(initialState, { type: 'CRUMPLE_FINISHED' })).toBe(
+    initialState,
+  );
   expect(feedbackReducer(initialState, { type: 'OPEN' })).toBe(initialState);
 });

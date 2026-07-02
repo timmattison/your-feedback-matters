@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { toPng } from 'html-to-image';
 import { App } from './app';
 import {
   BLANK_FEEDBACK_MESSAGE,
@@ -38,7 +39,9 @@ test('blank toss shakes the form and shows the scolding in red', async () => {
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   const alert = screen.getByRole('alert');
   expect(alert).toHaveTextContent(BLANK_FEEDBACK_MESSAGE);
-  expect(screen.getByRole('form', { name: 'Feedback form' })).toHaveClass('shake');
+  expect(screen.getByRole('form', { name: 'Feedback form' })).toHaveClass(
+    'shake',
+  );
 });
 
 test('editing a field clears the scolding', async () => {
@@ -59,5 +62,23 @@ test('a filled toss captures the form and hides it for the crumple', async () =>
     expect(screen.queryByLabelText('Comment')).not.toBeInTheDocument(),
   );
   // mid-flight is not the closed state — no reopen button
-  expect(screen.queryByRole('button', { name: REOPEN_BUTTON_LABEL })).toBeNull();
+  expect(
+    screen.queryByRole('button', { name: REOPEN_BUTTON_LABEL }),
+  ).toBeNull();
+});
+
+test('a failed snapshot capture still advances instead of sticking in capturing', async () => {
+  const user = userEvent.setup();
+  vi.mocked(toPng).mockRejectedValueOnce(new Error('capture failed'));
+  render(<App />);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
+  await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  // the machine must reach 'crumpling' (with a null snapshot) — the form hides
+  await waitFor(() =>
+    expect(screen.queryByLabelText('Comment')).not.toBeInTheDocument(),
+  );
+  expect(
+    screen.queryByRole('button', { name: REOPEN_BUTTON_LABEL }),
+  ).toBeNull();
 });
