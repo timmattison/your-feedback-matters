@@ -19,6 +19,10 @@ test('pickBallAt returns null when the point is outside all wads', () => {
   expect(pickBallAt({ x: 300, y: 300 }, balls)).toBeNull();
 });
 
+test('pickBallAt returns null for an empty pile (all wads fallen out)', () => {
+  expect(pickBallAt({ x: 400, y: 400 }, [])).toBeNull();
+});
+
 test('pickBallAt returns the wad id when the point is inside exactly one wad', () => {
   const balls = [ball(1, 100, 100, 10, 0), ball(2, 500, 500, 20, 1)];
   expect(pickBallAt({ x: 505, y: 495 }, balls)).toBe(2);
