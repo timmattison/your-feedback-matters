@@ -24,9 +24,11 @@ function dampedReach(v0: number, flightTime: number): number {
 function landingPoint(plan: ReturnType<typeof planToss>): Vec3 {
   const T = plan.flightTime;
   return {
-    x: from.x + plan.velocity[0] * T,
+    // Horizontal motion is damped (planToss compensates for it), so the reach is
+    // the damped integral, not v0*T. Vertical stays the plain ballistic drop.
+    x: from.x + dampedReach(plan.velocity[0], T),
     y: from.y + plan.velocity[1] * T + 0.5 * GRAVITY_Y * T * T,
-    z: from.z + plan.velocity[2] * T,
+    z: from.z + dampedReach(plan.velocity[2], T),
   };
 }
 
