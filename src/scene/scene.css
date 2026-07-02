@@ -48,3 +48,15 @@
 .basket-hit-layer {
   pointer-events: auto !important;
 }
+
+/* The dismiss catcher: a full-viewport transparent layer mounted only while a
+   note is fully open (inspect phase 'open'). Like the hit-layer it opts back
+   into pointer events (the overlay and its children are otherwise inert), so a
+   click ANYWHERE sends the open note re-crumpling back into the basket
+   (DISMISS). The centered form is `inert` while a note is open, so catching its
+   clicks here steals nothing the user could otherwise do. */
+.dismiss-catcher {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto !important;
+}

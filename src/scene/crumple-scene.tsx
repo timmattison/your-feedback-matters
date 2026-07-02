@@ -104,6 +104,7 @@ interface SceneContentsProps extends CrumpleSceneProps {
   inspectPhase: InspectPhase;
   inspectNoteId: number | null;
   onOpenDone(): void;
+  onCloseDone(): void;
   onPickModelChange(model: PickModel): void;
 }
 
@@ -156,6 +157,32 @@ function SceneContents(props: SceneContentsProps) {
   const removeBall = useCallback((id: number) => {
     setPile((current) => current.filter((entry) => entry.id !== id));
   }, []);
+
+  // Once a note is fished out it is no longer the "active toss": clear activeId so
+  // that when it is re-thrown on dismiss it does NOT report onRested to the
+  // feedback machine, which must stay in idle across the whole inspect round trip.
+  useEffect(() => {
+    if (props.inspectNoteId !== null) {
+      setActiveId((cur) => (cur === props.inspectNoteId ? null : cur));
+    }
+  }, [props.inspectNoteId]);
+
+  // On dismiss-complete, clear the note's resting pose (it is about to be thrown
+  // again, so it must not be pickable until it re-settles) and then tell the
+  // machine the close finished — which returns to browsing and swaps this note
+  // back for a PaperBall that tosses it into the basket.
+  const onCloseDoneProp = props.onCloseDone;
+  const handleCloseDone = useCallback(() => {
+    const id = props.inspectNoteId;
+    if (id !== null) {
+      setPile((current) =>
+        current.map((e) =>
+          e.id === id ? { ...e, restPosition: null, restQuaternion: null } : e,
+        ),
+      );
+    }
+    onCloseDoneProp();
+  }, [props.inspectNoteId, onCloseDoneProp]);
 
   // Bump a nonce whenever the basket slides (visible flips), which each resting
   // ball turns into a kick. Skip the initial mount — only actual slides jolt.
@@ -263,17 +290,24 @@ function SceneContents(props: SceneContentsProps) {
             />
           )}
         {pile.map((entry) => {
-          const inspected =
-            props.inspectPhase !== 'browsing' &&
-            entry.id === props.inspectNoteId;
-          // When a wad is swapped to InspectedNote its old PaperBall unmounts and
-          // disposes entry.geometry; that's fine for Phase 3 — nothing re-mounts
-          // it here. Phase 4's re-throw handles re-creating it.
-          return inspected ? (
+          // The phase of THIS note if it is the one being inspected, else null. The
+          // `&& props.inspectPhase !== 'browsing'` both gates the swap and narrows the
+          // phase to the non-browsing union InspectedNote expects. On dismiss the
+          // machine returns to browsing, this becomes a fresh PaperBall again, and it
+          // re-tosses itself into the basket — reusing the stored geometry (three
+          // re-uploads it after the earlier InspectedNote swap disposed it).
+          const inspectedPhase =
+            entry.id === props.inspectNoteId &&
+            props.inspectPhase !== 'browsing'
+              ? props.inspectPhase
+              : null;
+          return inspectedPhase !== null ? (
             <InspectedNote
               key={entry.id}
               entry={entry}
+              phase={inspectedPhase}
               onOpenDone={props.onOpenDone}
+              onCloseDone={handleCloseDone}
             />
           ) : (
             <PaperBall
@@ -358,6 +392,7 @@ export function CrumpleScene(props: CrumpleSceneProps) {
           inspectPhase={inspect.phase}
           inspectNoteId={inspect.noteId}
           onOpenDone={() => dispatchInspect({ type: 'OPEN_DONE' })}
+          onCloseDone={() => dispatchInspect({ type: 'CLOSE_DONE' })}
           onPickModelChange={(model) => setPickModel(model)}
         />
       </Canvas>
@@ -378,6 +413,12 @@ export function CrumpleScene(props: CrumpleSceneProps) {
             );
             if (id !== null) dispatchInspect({ type: 'INSPECT', noteId: id });
           }}
+        />
+      )}
+      {inspect.phase === 'open' && (
+        <div
+          className="dismiss-catcher"
+          onClick={() => dispatchInspect({ type: 'DISMISS' })}
         />
       )}
     </div>
