@@ -28,18 +28,23 @@
   }
 }
 
-/* R3F sets pointer-events: auto inline on its canvas for its own event system,
-   which would swallow every click on the page. All picking here is DOM-driven
-   (the positioned .basket-hit-layer below), never R3F raycasting, so force the
-   canvas itself inert. The overlay is already pointer-events: none. */
-.scene-overlay canvas {
+/* R3F sets pointer-events: auto inline on BOTH its <canvas> AND the wrapper
+   <div> it renders around it — either one, sitting full-viewport at z-index 10,
+   would swallow every click on the page. All picking here is DOM-driven (the
+   positioned .basket-hit-layer below), never R3F raycasting, so force the whole
+   R3F subtree inert. The overlay itself is already pointer-events: none; this
+   blanket rule covers every element R3F injects beneath it. */
+.scene-overlay * {
   pointer-events: none !important;
 }
 
 /* The basket hit-layer: mounted only while a wad is clickable (form idle +
    browsing) and positioned over the basket's projected screen rect. It opts
    back into pointer events so its clicks can be picked; everything else in the
-   overlay stays inert, so the centered form remains fully typeable. */
+   overlay stays inert, so the centered form remains fully typeable. Declared
+   after (and !important like) the blanket rule above so it wins on equal
+   specificity — a pointer-events:none ancestor still lets a pointer-events:auto
+   descendant receive clicks. */
 .basket-hit-layer {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
