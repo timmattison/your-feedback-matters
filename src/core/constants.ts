@@ -41,6 +41,11 @@ export const BASKET_RADIUS = 1.1;
 export const BASKET_BOTTOM_RADIUS = 0.9;
 export const BASKET_HEIGHT = 2.5;
 export const SETTLE_TIMEOUT_MS = 3500;
+// How long to wait for the form-to-PNG capture before giving up and tossing a
+// blank-textured wad instead. The capture usually finishes in tens of ms; this
+// only trips if `toPng` stalls (see captureWithFallback), so the machine can
+// never wedge in its 'capturing' phase.
+export const CAPTURE_TIMEOUT_MS = 3000;
 export const REST_SPEED_THRESHOLD = 0.15;
 export const MISS_PROBABILITY = 0.25;
 

@@ -7,6 +7,8 @@ import { feedbackReducer, initialState } from './core/feedback-machine';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
 import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
 import { includeInSnapshot } from './core/snapshot-filter';
+import { captureWithFallback } from './core/capture-with-fallback';
+import { CAPTURE_TIMEOUT_MS } from './core/constants';
 
 // Class name and @keyframes name (src/app.css) for the css-mode toss.
 // The animationend handler keys on this exact animation name, so the class,
@@ -76,13 +78,15 @@ export function App({ mode }: AppProps = {}) {
     }
     setFormRect(node.getBoundingClientRect());
     let cancelled = false;
-    toPng(node, { filter: includeInSnapshot })
-      .then((url) => {
-        if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: url });
-      })
-      .catch(() => {
-        if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: null });
-      });
+    // Race the capture against a timeout: a rejected OR stalled toPng both fall
+    // back to a null (blank-textured) snapshot so the machine always leaves
+    // 'capturing' and the form can never freeze mid-toss.
+    captureWithFallback(
+      toPng(node, { filter: includeInSnapshot }),
+      CAPTURE_TIMEOUT_MS,
+    ).then((url) => {
+      if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: url });
+    });
     return () => {
       cancelled = true;
     };

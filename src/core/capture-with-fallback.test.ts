@@ -5,7 +5,10 @@ import { captureWithFallback } from './capture-with-fallback';
 const never = new Promise<string>(() => {});
 
 test('resolves to the snapshot url when the capture finishes in time', async () => {
-  const result = await captureWithFallback(Promise.resolve('data:image/png'), 50);
+  const result = await captureWithFallback(
+    Promise.resolve('data:image/png'),
+    50,
+  );
   expect(result).toBe('data:image/png');
 });
 
