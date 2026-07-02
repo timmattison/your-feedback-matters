@@ -318,6 +318,23 @@ test('custom title and button labels override the copy; defaults keep the built-
   ).toBeInTheDocument();
 });
 
+test('a custom blankMessage scolds with that text; default uses the built-in scold', async () => {
+  const user = userEvent.setup();
+  const { unmount } = render(
+    <YourFeedbackMatters blankMessage="Say something!" />,
+  );
+  await openForm(user);
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  expect(screen.getByRole('alert')).toHaveTextContent('Say something!');
+  unmount();
+
+  // no blankMessage prop → the built-in scold
+  render(<YourFeedbackMatters />);
+  await openForm(user);
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  expect(screen.getByRole('alert')).toHaveTextContent(BLANK_FEEDBACK_MESSAGE);
+});
+
 test('css mode ignores animationend from other animations (e.g. a bubbled shake)', async () => {
   const user = userEvent.setup();
   render(<YourFeedbackMatters mode="css" />);
