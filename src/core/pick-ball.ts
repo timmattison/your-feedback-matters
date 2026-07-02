@@ -52,6 +52,32 @@ export function basketScreenRect(
   };
 }
 
+// The clickable region for the DOM hit-layer: `basketRect` widened to cover every
+// pickable wad's padded disk. `basketScreenRect` only spans the basket interior (floor
+// up to the mouth), but a tall pile after many tosses can come to rest ABOVE the mouth —
+// those top-of-pile wads project above the mouth rect and would fall outside the clickable
+// box even though `pickBallAt` matches them. This returns the axis-aligned union of
+// `basketRect` and each ball's disk bounding box [cx - r, cy - r] .. [cx + r, cy + r], so
+// the region always covers every wad. With no balls it returns `basketRect` unchanged, and
+// the result never shrinks below `basketRect`. The wads are basket-constrained, so the
+// union stays down in the bottom-right corner, clear of the centred feedback form.
+export function hitLayerRect(
+  basketRect: ScreenRect,
+  balls: readonly ScreenBall[],
+): ScreenRect {
+  let left = basketRect.left;
+  let top = basketRect.top;
+  let right = basketRect.left + basketRect.width;
+  let bottom = basketRect.top + basketRect.height;
+  for (const ball of balls) {
+    left = Math.min(left, ball.cx - ball.r);
+    top = Math.min(top, ball.cy - ball.r);
+    right = Math.max(right, ball.cx + ball.r);
+    bottom = Math.max(bottom, ball.cy + ball.r);
+  }
+  return { left, top, width: right - left, height: bottom - top };
+}
+
 // Which wad (if any) is under a screen-space click. The spec calls this "the front-most
 // resting wad under the point": among the projected disks that contain the click, the wad
 // nearest the camera (largest world z = `depth`) occludes and wins — that is the primary

@@ -26,6 +26,7 @@ import {
 import {
   pickBallAt,
   basketScreenRect,
+  hitLayerRect,
   type ScreenBall,
   type ScreenRect,
 } from '../core/pick-ball';
@@ -379,6 +380,13 @@ export function CrumpleScene(props: CrumpleSceneProps) {
     onInspectingChange(inspect.phase !== 'browsing');
   }, [inspect.phase, onInspectingChange]);
 
+  // The hit-layer's clickable box: the basket rect widened to cover every pickable
+  // wad, since a tall pile can rest above the basket mouth (see hitLayerRect).
+  const hitRect =
+    pickModel === null
+      ? null
+      : hitLayerRect(pickModel.basketRect, pickModel.balls);
+
   return (
     <div
       className={`scene-overlay${props.visible ? '' : ' scene-overlay--hidden'}`}
@@ -396,15 +404,15 @@ export function CrumpleScene(props: CrumpleSceneProps) {
           onPickModelChange={(model) => setPickModel(model)}
         />
       </Canvas>
-      {armed && pickModel !== null && (
+      {armed && pickModel !== null && hitRect !== null && (
         <div
           className="basket-hit-layer"
           style={{
             position: 'absolute',
-            left: pickModel.basketRect.left,
-            top: pickModel.basketRect.top,
-            width: pickModel.basketRect.width,
-            height: pickModel.basketRect.height,
+            left: hitRect.left,
+            top: hitRect.top,
+            width: hitRect.width,
+            height: hitRect.height,
           }}
           onClick={(event) => {
             const id = pickBallAt(
