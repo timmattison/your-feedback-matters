@@ -12,5 +12,13 @@ import * as THREE from 'three';
  * jittered paper from poking through the basket walls.
  */
 export function boundingRadius(geometry: THREE.BufferGeometry): number {
-  return 0;
+  const position = geometry.getAttribute('position');
+  let maxSquared = 0;
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+    maxSquared = Math.max(maxSquared, x * x + y * y + z * z);
+  }
+  return Math.sqrt(maxSquared);
 }

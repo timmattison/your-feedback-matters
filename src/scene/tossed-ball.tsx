@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useSphere } from '@react-three/cannon';
 import * as THREE from 'three';
 import { planToss } from '../core/toss';
+import { boundingRadius } from '../core/bounding-radius';
 import {
   BASKET_RADIUS,
   REST_SPEED_THRESHOLD,
@@ -40,9 +41,18 @@ export function TossedBall({
     [seed, startPosition, basketMouth],
   );
 
+  // The design ballRadius is where the *average* surface sits, but the seeded
+  // lumps push some vertices ~20% farther out. Size the collider to the mesh's
+  // true reach so those lumps rest against the basket wall instead of poking
+  // through it. (max() guards against a degenerate empty geometry.)
+  const colliderRadius = useMemo(
+    () => Math.max(ballRadius, boundingRadius(geometry)),
+    [ballRadius, geometry],
+  );
+
   const [ref, api] = useSphere(() => ({
     mass: 0.05,
-    args: [ballRadius],
+    args: [colliderRadius],
     position: startPosition,
     velocity: plan.velocity,
     angularVelocity: plan.angularVelocity,
