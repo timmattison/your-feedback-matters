@@ -364,10 +364,11 @@ test('starts idle with empty fields', () => {
   expect(initialState.fields).toEqual({ name: '', comment: '' });
 });
 
-test('isBlank is true only when both trimmed fields are empty', () => {
+test('isBlank is true when either trimmed field is empty', () => {
   expect(isBlank({ name: '  ', comment: '\n' })).toBe(true);
-  expect(isBlank({ name: 'Tim', comment: '' })).toBe(false);
-  expect(isBlank({ name: '', comment: 'hi' })).toBe(false);
+  expect(isBlank({ name: 'Tim', comment: '' })).toBe(true);
+  expect(isBlank({ name: '', comment: 'hi' })).toBe(true);
+  expect(isBlank({ name: 'Tim', comment: 'hi' })).toBe(false);
 });
 
 test('CANCEL closes and clears fields', () => {
@@ -451,7 +452,7 @@ export const initialState: FeedbackState = {
 };
 
 export function isBlank(fields: FormFields): boolean {
-  return fields.name.trim() === '' && fields.comment.trim() === '';
+  return fields.name.trim() === '' || fields.comment.trim() === '';
 }
 
 export function feedbackReducer(state: FeedbackState, event: FeedbackEvent): FeedbackState {
@@ -599,6 +600,7 @@ test('editing a field clears the scolding', async () => {
 test('a filled toss captures the form and hides it for the crumple', async () => {
   const user = userEvent.setup();
   render(<App />);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'Needs more cowbell');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   await waitFor(() =>
@@ -1747,6 +1749,7 @@ vi.mock('./scene/crumple-scene', () => ({
 test('after the toss settles, a fresh empty form is ready for another round', async () => {
   const user = userEvent.setup();
   render(<App />);
+  await user.type(screen.getByLabelText('Name'), 'Tim');
   await user.type(screen.getByLabelText('Comment'), 'straight to the bin');
   await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
   await waitFor(() => expect(sceneProps.current?.phase).toBe('crumpling'));

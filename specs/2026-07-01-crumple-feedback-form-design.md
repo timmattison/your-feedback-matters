@@ -22,8 +22,8 @@ The joke is the product: your feedback matters, straight into the circular file.
 | Deliverable shape | Standalone Vite + React + TypeScript app (component stays extractable) |
 | Crumple visual | Snapshot the real filled-out form as a texture; white-paper fallback |
 | The toss | Visible wastebasket; ball occasionally rims out and rolls away (~25%) |
-| Crumple technique | Procedural CPU vertex deformation (pure, seeded, testable); physics only for the toss — **assumed while Tim was AFK, flag for review** |
-| Blank-check rule | Error iff BOTH name and comment are blank after trimming (literal "didn't fill anything out") — **assumption, flag for review** |
+| Crumple technique | Procedural CPU vertex deformation (pure, seeded, testable); physics only for the toss (confirmed by Tim 2026-07-01) |
+| Blank-check rule | Error if EITHER name or comment is blank after trimming (confirmed by Tim 2026-07-01) |
 
 Key physics reality: cannon (`@react-three/cannon`) is a rigid-body engine and
 cannot deform a mesh. So the crumple is procedural mesh deformation, and cannon
@@ -45,8 +45,8 @@ starts in `idle` (form visible and editable):
 ```
 closed ──"Got feedback?"──▶ idle
 idle ──Cancel──▶ closed                      (fields cleared immediately)
-idle ──Toss, both fields blank──▶ error ──shake ends──▶ idle
-idle ──Toss, any content──▶ capturing ──▶ crumpling ──▶ tossing ──▶ settling ──▶ idle (fresh form)
+idle ──Toss, either field blank──▶ error ──shake ends──▶ idle
+idle ──Toss, both fields filled──▶ capturing ──▶ crumpling ──▶ tossing ──▶ settling ──▶ idle (fresh form)
 ```
 
 - **closed**: form hidden; a small "Got feedback?" button summons it.
