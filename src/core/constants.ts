@@ -1,0 +1,10 @@
+export const CAMERA_FOV_DEG = 50;
+export const CAMERA_DISTANCE = 10;
+export const CRUMPLE_DURATION_S = 1.1;
+export const MESH_SEGMENTS = 64;
+export const GRAVITY_Y = -9.81;
+export const BASKET_RADIUS = 0.9;
+export const BASKET_HEIGHT = 1.2;
+export const SETTLE_TIMEOUT_MS = 3500;
+export const REST_SPEED_THRESHOLD = 0.15;
+export const MISS_PROBABILITY = 0.25;
