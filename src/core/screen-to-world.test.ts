@@ -1,4 +1,9 @@
-import { domRectToWorld, visibleWorldHeight } from './screen-to-world';
+import {
+  domRectToWorld,
+  visibleWorldHeight,
+  worldPointToScreen,
+  worldRadiusToScreen,
+} from './screen-to-world';
 
 const cam = { fovDeg: 50, distance: 10 };
 const viewport = { width: 1000, height: 800 };
@@ -39,4 +44,36 @@ test('screen down/right maps to world down/right', () => {
   );
   expect(w.center[0]).toBeGreaterThan(0); // right of center
   expect(w.center[1]).toBeLessThan(0); // below center (world y up)
+});
+
+test('worldPointToScreen round-trips a centered rect back to its center pixel', () => {
+  const rect = { left: 400, top: 300, width: 200, height: 200 };
+  const w = domRectToWorld(rect, viewport, cam);
+  const p = worldPointToScreen(w.center, viewport, cam);
+  expect(p.x).toBeCloseTo(500, 6); // rect center x px
+  expect(p.y).toBeCloseTo(400, 6); // rect center y px
+});
+
+test('worldPointToScreen round-trips an off-center rect back to its center pixel', () => {
+  const rect = { left: 900, top: 700, width: 100, height: 100 };
+  const w = domRectToWorld(rect, viewport, cam);
+  const p = worldPointToScreen(w.center, viewport, cam);
+  expect(p.x).toBeCloseTo(950, 6); // rect center x px
+  expect(p.y).toBeCloseTo(750, 6); // rect center y px
+});
+
+test('worldRadiusToScreen maps a full-height world span to the full viewport height', () => {
+  expect(worldRadiusToScreen(visibleWorldHeight(cam), viewport, cam)).toBeCloseTo(
+    viewport.height,
+    6,
+  );
+});
+
+test('worldRadiusToScreen round-trips a rect height back to its pixel height', () => {
+  const rect = { left: 0, top: 0, width: 100, height: 200 };
+  const w = domRectToWorld(rect, viewport, cam);
+  expect(worldRadiusToScreen(w.height, viewport, cam)).toBeCloseTo(
+    rect.height,
+    6,
+  );
 });
