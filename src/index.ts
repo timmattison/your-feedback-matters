@@ -8,6 +8,7 @@
 export {
   YourFeedbackMatters,
   type YourFeedbackMattersProps,
+  type PoweredBy,
 } from './your-feedback-matters';
 
 export type { AnimationMode } from './core/animation-mode';

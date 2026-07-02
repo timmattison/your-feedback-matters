@@ -28,6 +28,14 @@ import { CAPTURE_TIMEOUT_MS } from './core/constants';
 // the keyframes, and the guard must all agree.
 const CSS_TOSS_ANIMATION = 'css-toss';
 
+/**
+ * Controls the "Powered by" footer badge.
+ * - `true` (default): show the built-in badge linking to this project.
+ * - `false`: hide the badge entirely (so a host doesn't ship a link back here).
+ * - `{ text, href }`: show a custom badge with your own label + link.
+ */
+export type PoweredBy = boolean | { text: string; href: string };
+
 export interface YourFeedbackMattersProps {
   /**
    * Forces the animation mode instead of auto-detecting it via
@@ -59,6 +67,12 @@ export interface YourFeedbackMattersProps {
   reopenLabel?: string;
   /** Message shown when a blank form is tossed. Default the built-in scold. */
   blankMessage?: string;
+  /**
+   * Controls the "Powered by" footer badge. Defaults to `true` (the built-in
+   * badge linking to this project). Pass `false` to hide it, or
+   * `{ text, href }` to show your own label + link. See {@link PoweredBy}.
+   */
+  poweredBy?: PoweredBy;
 }
 
 export function YourFeedbackMatters({
@@ -70,7 +84,13 @@ export function YourFeedbackMatters({
   cancelLabel = CANCEL_BUTTON_LABEL,
   reopenLabel = REOPEN_BUTTON_LABEL,
   blankMessage,
+  poweredBy = true,
 }: YourFeedbackMattersProps = {}) {
+  const showPoweredBy = poweredBy !== false;
+  const poweredByText =
+    typeof poweredBy === 'object' ? poweredBy.text : POWERED_BY_TEXT;
+  const poweredByHref =
+    typeof poweredBy === 'object' ? poweredBy.href : REPO_URL;
   // Resolved once per mount so a mid-session change to the media query or
   // WebGL support doesn't yank the user between rendering strategies
   // mid-animation.
@@ -249,9 +269,9 @@ export function YourFeedbackMatters({
           onInspectingChange={setInspecting}
         />
       )}
-      {state.phase !== 'closed' && (
+      {state.phase !== 'closed' && showPoweredBy && (
         <footer className="powered-by">
-          <a href={REPO_URL}>{POWERED_BY_TEXT}</a>
+          <a href={poweredByHref}>{poweredByText}</a>
         </footer>
       )}
     </main>
