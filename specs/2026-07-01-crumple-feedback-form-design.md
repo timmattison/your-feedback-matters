@@ -17,13 +17,13 @@ The joke is the product: your feedback matters, straight into the circular file.
 
 ## Decisions (from brainstorm)
 
-| Decision | Choice |
-| --- | --- |
-| Deliverable shape | Standalone Vite + React + TypeScript app (component stays extractable) |
-| Crumple visual | Snapshot the real filled-out form as a texture; white-paper fallback |
-| The toss | Visible wastebasket; ball occasionally rims out and rolls away (~25%) |
+| Decision          | Choice                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Deliverable shape | Standalone Vite + React + TypeScript app (component stays extractable)                                              |
+| Crumple visual    | Snapshot the real filled-out form as a texture; white-paper fallback                                                |
+| The toss          | Visible wastebasket; ball occasionally rims out and rolls away (~25%)                                               |
 | Crumple technique | Procedural CPU vertex deformation (pure, seeded, testable); physics only for the toss (confirmed by Tim 2026-07-01) |
-| Blank-check rule | Error if EITHER name or comment is blank after trimming (confirmed by Tim 2026-07-01) |
+| Blank-check rule  | Error if EITHER name or comment is blank after trimming (confirmed by Tim 2026-07-01)                               |
 
 Key physics reality: cannon (`@react-three/cannon`) is a rigid-body engine and
 cannot deform a mesh. So the crumple is procedural mesh deformation, and cannon
@@ -40,16 +40,18 @@ bounces, the miss.
 ## UX Flow / State Machine
 
 A pure reducer (`src/core/feedback-machine.ts`), fully unit-tested. The app
-starts in `idle` (form visible and editable):
+starts in `closed` (the "Got feedback?" landing; form hidden, basket
+off-screen):
 
 ```
-closed ──"Got feedback?"──▶ idle
-idle ──Cancel──▶ closed                      (fields cleared immediately)
+closed ──"Got feedback?"──▶ idle             (basket slides in)
+idle ──Cancel──▶ closed                      (fields cleared; basket slides out)
 idle ──Toss, either field blank──▶ error ──shake ends──▶ idle
-idle ──Toss, both fields filled──▶ capturing ──▶ crumpling ──▶ tossing ──▶ settling ──▶ idle (fresh form)
+idle ──Toss, both fields filled──▶ capturing ──▶ crumpling ──▶ tossing ──▶ settling ──▶ closed (landing; basket slides out)
 ```
 
-- **closed**: form hidden; a small "Got feedback?" button summons it.
+- **closed**: form hidden; the basket overlay is slid off-screen; a "Got
+  feedback?" button summons both. This is the initial and post-toss state.
 - **idle**: form editable. Two buttons: **Cancel** and **Circular file, in style**.
 - **error**: CSS shake (~500 ms) + red text, exactly:
   `Be serious, there's nothing we can do if your feedback is blank`.
@@ -62,7 +64,8 @@ idle ──Toss, both fields filled──▶ capturing ──▶ crumpling ─�
 - **tossing**: rigid body gets a computed impulse + random torque toward the
   basket. ~25% of throws (seeded) hit the rim and roll away off-screen.
 - **settling**: ball rests in basket (or exits viewport); after a beat it fades
-  and is removed. A fresh, empty form fades back in. Repeatable forever.
+  and is removed, then the machine returns to `closed` — the basket slides
+  back out to the "Got feedback?" landing. Repeatable forever.
 
 ## Architecture
 
@@ -107,6 +110,7 @@ Weights animate: folds dominate early/mid; ball attraction dominates late.
 Normals are recomputed each frame for correct shading of creases.
 
 Property tests (vitest, deterministic by seed):
+
 - t = 0 is the identity (flat sheet).
 - Bounding radius shrinks monotonically in t (sampled).
 - Final bounding radius within [rMin, rMax] design bounds.

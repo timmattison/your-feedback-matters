@@ -1,16 +1,19 @@
 # Your Feedback Matters
 
 A feedback form with exactly one honest feature: **your feedback is never
-stored anywhere.** Type a Name and a Comment, hit **"Circular file, in
-style,"** and watch the form snapshot itself, crumple into a lumpy paper
-ball, and get physically tossed at a wastebasket. About a quarter of throws
-rim out and roll away, because that's how throwing paper at a trash can
-actually goes. That's the whole product. That's the joke.
+stored anywhere.** The page opens on a single **"Got feedback?"** button;
+click it and a wire wastebasket slides in from the right while the form
+appears. Type a Name and a Comment, hit **"Circular file, in style,"** and
+watch the form snapshot itself, crumple into a lumpy paper ball, and get
+physically tossed at that wastebasket. About a quarter of throws rim out and
+roll away, because that's how throwing paper at a trash can actually goes.
+Once the paper's gone the basket slides back out and you're returned to the
+**"Got feedback?"** landing. That's the whole product. That's the joke.
 
 Leave a field blank and hit toss anyway, and the form shakes and scolds you
 in red: _"Be serious, there's nothing we can do if your feedback is
-blank"._ Hit **Cancel** and the form politely closes, replaced by a
-**"Got feedback?"** button to reopen it. Either way, nothing you type is
+blank"._ Hit **Cancel** and the form politely closes and the basket slides
+away, back to the **"Got feedback?"** button. Either way, nothing you type is
 ever sent, saved, logged, or read by anyone. There is no backend.
 
 ![A feedback form crumples into a paper ball and is tossed into a wire wastebasket](./docs/crumple-toss.gif)
@@ -18,8 +21,10 @@ ever sent, saved, logged, or read by anyone. There is no backend.
 ## How it works
 
 1. **Fill the form.** Name + Comment, client-side only, held in a small
-   state machine (`idle → error → capturing → crumpling → tossing →
-settling → idle`, see `src/core/feedback-machine.ts`).
+   state machine (`closed → idle → error → capturing → crumpling → tossing →
+settling → closed`, see `src/core/feedback-machine.ts`). The app lands in
+   `closed` — the "Got feedback?" button — and returns there after a toss or
+   a cancel; the 3D basket overlay slides in on open and out on close.
 2. **Snapshot.** On toss, [`html-to-image`](https://github.com/bubkoo/html-to-image)
    rasterizes the live DOM form into a PNG data URL.
 3. **Crumple.** That snapshot is mapped onto a 64×64-segment plane in a
