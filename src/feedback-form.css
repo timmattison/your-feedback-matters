@@ -1,3 +1,12 @@
+/* Self-contained box model so the form's width/padding math holds even when
+   FeedbackForm is used standalone (it's an exported component) on a host that
+   ships no `box-sizing: border-box` reset. */
+.feedback-form,
+.feedback-form *,
+.feedback-form *::before,
+.feedback-form *::after {
+  box-sizing: border-box;
+}
 .feedback-form {
   width: min(26rem, 90vw);
   background: #fdfdf8;

@@ -260,7 +260,11 @@ export function YourFeedbackMatters({
           </div>
         ))}
       {state.phase === 'closed' && (
-        <button type="button" onClick={() => dispatch({ type: 'OPEN' })}>
+        <button
+          type="button"
+          className="reopen"
+          onClick={() => dispatch({ type: 'OPEN' })}
+        >
           {reopenLabel}
         </button>
       )}

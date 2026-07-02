@@ -1,7 +1,48 @@
+/* Layout contract: the widget is a fixed, full-viewport OVERLAY that floats
+   above the host page rather than taking space in its normal document flow, so
+   dropping <YourFeedbackMatters/> anywhere doesn't push the host's content
+   around. The container is click-through (pointer-events:none) — only the
+   interactive islands re-enabled below capture clicks, so the rest of the host
+   page stays usable. A consumer can restyle `.page` (e.g. corner-anchor the
+   button, lower the z-index) via their own CSS after importing the widget
+   stylesheet. The widget ships NO global reset — everything here is scoped. */
 .page {
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
   display: grid;
   place-items: center;
+  /* Clip the basket's off-screen slide (scene-overlay translateX(100%)) so it
+     can never add a horizontal scrollbar to the host — the old design leaned on
+     a global `body { overflow-x: hidden }`, which a library must not impose.
+     The transform makes `.page` the containing block for the fixed
+     `.scene-overlay`, so overflow:hidden actually clips its slid-out transform. */
+  overflow: hidden;
+  transform: translateZ(0);
+  pointer-events: none;
+  /* Self-contained box model + type, so the form doesn't depend on a host reset
+     or inherit an unexpected font. */
+  box-sizing: border-box;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+/* Re-enable interaction only on the interactive islands; the empty space around
+   them and the transparent 3D scene canvas stay click-through so the host page
+   underneath remains fully usable. (The scene's own hit-layer / dismiss-catcher
+   opt back in with `pointer-events: auto !important` — see scene.css.) */
+.feedback-form,
+.powered-by,
+.reopen {
+  pointer-events: auto;
 }
 .powered-by {
   position: fixed;
