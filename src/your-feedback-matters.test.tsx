@@ -83,6 +83,31 @@ test('the Powered by badge is hidden on the landing and appears once opened', as
   ).toBeInTheDocument();
 });
 
+test('poweredBy={false} hides the badge entirely once opened', async () => {
+  const user = userEvent.setup();
+  render(<YourFeedbackMatters poweredBy={false} />);
+  await openForm(user);
+  expect(screen.queryByRole('link', { name: POWERED_BY_TEXT })).toBeNull();
+  expect(screen.queryByRole('link')).toBeNull();
+});
+
+test('poweredBy={{ text, href }} renders a custom badge once opened', async () => {
+  const user = userEvent.setup();
+  render(
+    <YourFeedbackMatters
+      poweredBy={{ text: 'Made by Acme', href: 'https://acme.test' }}
+    />,
+  );
+  await openForm(user);
+  // the built-in badge is gone…
+  expect(screen.queryByRole('link', { name: POWERED_BY_TEXT })).toBeNull();
+  // …replaced by the custom label + link
+  expect(screen.getByRole('link', { name: 'Made by Acme' })).toHaveAttribute(
+    'href',
+    'https://acme.test',
+  );
+});
+
 test('the page lands on the "Got feedback?" button, not the form', () => {
   render(<YourFeedbackMatters />);
   expect(
