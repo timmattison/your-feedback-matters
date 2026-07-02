@@ -50,12 +50,16 @@ settling → closed`, see `src/core/feedback-machine.ts`). The app lands in
 5. **Pile or cull.** At rest each ball checks whether it's inside the mouth
    (`isBallInBasket`, `src/core/basket-containment.ts`). Made shots persist —
    the pile lives in the scene across the closed↔open cycle, so paper
-   accumulates and later tosses land on the stack. A ball that ended up
-   outside fades out and is removed. Whenever the basket slides, every
-   resting ball gets a random kick (`JOLT_*` in `src/core/constants.ts`); most
-   resettle, but the odd one clears the rim, falls out, and is culled by the
-   same rule — the pile's "chance to go flying." The form then resets for
-   another round.
+   accumulates and later tosses land on the stack. Each wad is small, heavy,
+   high-damped, and allowed to sleep (`BALL_*`/`PILE_*` in
+   `src/core/constants.ts`), so it thuds to a stop and several nestle in the bin
+   instead of rolling around. A ball that ended up outside fades out and is
+   removed. Whenever the basket slides, every resting ball wakes and gets a
+   random kick (`JOLT_*`); most resettle, but the odd one clears the rim, falls
+   out, and is culled by the same rule — the pile's "chance to go flying." The
+   slide-in kick is held until the basket finishes arriving on-screen
+   (`joltDelayMs`, `src/core/jolt.ts`) so the papers fly in view. The form then
+   resets for another round.
 
 ### Fallbacks
 
@@ -98,7 +102,7 @@ pnpm test      # run the test suite (vitest run)
 pnpm build     # tsc -b && vite build → dist/
 ```
 
-39 tests currently cover every pure module in `src/core/` plus the app's
+77 tests currently cover every pure module in `src/core/` plus the app's
 phase-transition wiring end to end (blank scold, cancel/reopen, capture →
 crumple → toss → settle → reset, and both fallback modes).
 
@@ -122,7 +126,8 @@ src/
                             core/ outputs, render them, stay dumb
     crumple-scene.tsx      top-level scene, phase-driven composition
     crumpling-paper.tsx    snapshot-textured plane, animated via CrumpleField
-    tossed-ball.tsx        physics body driven by planToss(), rest detection
+    paper-ball.tsx         one piled wad: planToss() flight, rest detection,
+                            in/out classify, slide jolt, fade-and-cull
     wastebasket.tsx        wire-frame basket + compound collider
     ground.tsx             ground plane collider
 

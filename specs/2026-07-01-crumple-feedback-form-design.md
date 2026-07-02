@@ -139,14 +139,22 @@ closed↔open cycle (the scene stays mounted in full3d). Each toss appends a
 `PaperBall` (`scene/paper-ball.tsx`); it flies under physics and later tosses
 land on the stack.
 
+- **Small, dead wads** — each wad is packed tight (`BALL_PACKING` in
+  `crumple.ts`) so several nestle and pile up instead of two fat balls filling
+  the bin, and its rigid body is heavy, high-damped, grippy, low-bounce, and
+  sleep-enabled (`BALL_*`, `PILE_*` in `constants.ts`). A crumpled wad therefore
+  thuds to a stop and stays put rather than rolling and balancing like a marble.
 - **Classify on rest** — `isBallInBasket` (`core/basket-containment.ts`, pure +
   TDD'd) is a horizontal distance-to-rim test. Inside the mouth → the ball stays
   (a made shot piling up). Outside → it fades and the pile drops it. This covers
   both a missed toss that rolled away and a paper knocked clear later.
 - **Jolt on slide** — every time the basket slides (the `visible` flip), the
-  scene bumps a nonce and each resting ball applies a random up+sideways
-  velocity (`JOLT_*` in `constants.ts`). Most resettle; a few clear the rim,
-  fall out, and are culled by the same rule — "a chance to go flying."
+  scene bumps a nonce and each resting ball wakes and applies a random
+  up+sideways velocity (`JOLT_*` in `constants.ts`). Most resettle; a few clear
+  the rim, fall out, and are culled by the same rule — "a chance to go flying."
+  The slide-**in** kick is held (`joltDelayMs`, `core/jolt.ts`, TDD'd) until the
+  basket has finished arriving on-screen, so the papers fly where they can be
+  seen rather than while the overlay is still off to the right.
 - **Unbounded** — the pile grows without a cap (an accepted trade-off);
   each ball frees its geometry/texture/material on removal or unmount.
 
