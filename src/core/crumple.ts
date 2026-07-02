@@ -10,7 +10,10 @@ export interface CrumpleField {
 }
 
 const FOLD_COUNT = 10;
-const BALL_PACKING = 1.15;
+// Real crumpled paper settles at roughly half the area-preserving sphere
+// radius sqrt(A / 4π) — and the ball must still fit through the basket
+// mouth, so we pack tighter than a naive equal-area sphere would.
+const BALL_PACKING = 0.55;
 const RADIUS_JITTER = 0.22;
 
 interface Fold {
