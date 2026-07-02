@@ -27,3 +27,11 @@ export const PILE_IN_RADIUS = BASKET_RADIUS + 0.2;
 export const JOLT_UP = 3.2;
 export const JOLT_SIDE = 2.2;
 export const JOLT_SPIN = 8;
+
+// Basket slide durations, in milliseconds. These MUST match the transition
+// timings in scene.css (`.scene-overlay` slide-in, `.scene-overlay--hidden`
+// slide-out) — the jolt scheduler (`core/jolt.ts`) holds the slide-in kick
+// until the basket has finished arriving on-screen, so it can only line up with
+// the animation if the two agree.
+export const SLIDE_IN_MS = 700;
+export const SLIDE_OUT_MS = 500;
