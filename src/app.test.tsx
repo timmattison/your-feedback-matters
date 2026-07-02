@@ -40,6 +40,50 @@ test('footer shows the Powered by badge linking to the repo', () => {
   expect(link).toHaveAttribute('href', REPO_URL);
 });
 
+test('the page lands on the "Got feedback?" button, not the form', () => {
+  render(<App />);
+  expect(
+    screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }),
+  ).toBeInTheDocument();
+  expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+});
+
+test('after a toss settles, it returns to the "Got feedback?" landing (empty on reopen)', async () => {
+  const user = userEvent.setup();
+  render(<App mode="full3d" />);
+  await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
+  await user.type(screen.getByLabelText('Name'), 'Tim');
+  await user.type(screen.getByLabelText('Comment'), 'straight to the bin');
+  await user.click(screen.getByRole('button', { name: TOSS_BUTTON_LABEL }));
+  await waitFor(() => expect(sceneProps.current?.phase).toBe('crumpling'));
+  act(() => sceneProps.current?.onCrumpleFinished());
+  act(() => sceneProps.current?.onBallRested());
+  // full3d leaves 'settling' via the 1200ms safety timer in app.tsx
+  await waitFor(
+    () =>
+      expect(
+        screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }),
+      ).toBeInTheDocument(),
+    { timeout: 2000 },
+  );
+  expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+  // reopening gives a fresh, empty form for another round
+  await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
+  expect(screen.getByLabelText('Name')).toHaveValue('');
+  expect(screen.getByLabelText('Comment')).toHaveValue('');
+});
+
+test('the basket is slid out on the landing, slides in on open, and back out on cancel', async () => {
+  const user = userEvent.setup();
+  render(<App mode="full3d" />);
+  // scene stays mounted so it can animate, but is told to hide on the landing
+  expect(sceneProps.current?.visible).toBe(false);
+  await user.click(screen.getByRole('button', { name: REOPEN_BUTTON_LABEL }));
+  expect(sceneProps.current?.visible).toBe(true);
+  await user.click(screen.getByRole('button', { name: CANCEL_BUTTON_LABEL }));
+  expect(sceneProps.current?.visible).toBe(false);
+});
+
 test('cancel closes the form immediately and clears the fields', async () => {
   const user = userEvent.setup();
   render(<App />);

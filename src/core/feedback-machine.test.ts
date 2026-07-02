@@ -11,8 +11,8 @@ const filled: FeedbackState = {
   fields: { name: 'Tim', comment: 'Needs more cowbell' },
 };
 
-test('starts idle with empty fields', () => {
-  expect(initialState.phase).toBe('idle');
+test('starts closed on the "Got feedback?" landing, with empty fields', () => {
+  expect(initialState.phase).toBe('closed');
   expect(initialState.fields).toEqual({ name: '', comment: '' });
 });
 
@@ -78,6 +78,14 @@ test('filled toss walks capturing → crumpling → tossing → settling → fre
   expect(s.phase).toBe('idle');
   expect(s.fields).toEqual({ name: '', comment: '' });
   expect(s.snapshotUrl).toBeNull();
+});
+
+test('SETTLE_FINISHED returns to the closed landing, not a fresh open form', () => {
+  const settling: FeedbackState = { ...filled, phase: 'settling' };
+  const next = feedbackReducer(settling, { type: 'SETTLE_FINISHED' });
+  expect(next.phase).toBe('closed');
+  expect(next.fields).toEqual({ name: '', comment: '' });
+  expect(next.snapshotUrl).toBeNull();
 });
 
 test('events in the wrong phase are ignored', () => {
