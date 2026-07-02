@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import './feedback-form.css';
 import type { FormFields } from './core/feedback-machine';
 import type { FieldConfig } from './core/fields';
-import { CANCEL_BUTTON_LABEL, TOSS_BUTTON_LABEL } from './core/copy';
+import { CANCEL_BUTTON_LABEL, TITLE, TOSS_BUTTON_LABEL } from './core/copy';
 
 const DEFAULT_TEXTAREA_ROWS = 5;
 
@@ -11,6 +11,12 @@ export interface FeedbackFormProps {
   fieldConfigs: readonly FieldConfig[];
   /** Current value for each field, keyed by {@link FieldConfig.name}. */
   values: FormFields;
+  /** Heading shown above the fields. Default 'Your Feedback Matters'. */
+  title?: string;
+  /** Label for the toss/submit button. Default 'Circular file, in style'. */
+  tossLabel?: string;
+  /** Label for the cancel button. Default 'Cancel'. */
+  cancelLabel?: string;
   errorMessage: string | null;
   shaking: boolean;
   onFieldChange(field: string, value: string): void;
@@ -26,6 +32,9 @@ export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
     {
       fieldConfigs,
       values,
+      title = TITLE,
+      tossLabel = TOSS_BUTTON_LABEL,
+      cancelLabel = CANCEL_BUTTON_LABEL,
       errorMessage,
       shaking,
       onFieldChange,
@@ -45,7 +54,7 @@ export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
         onAnimationEnd={onShakeEnd}
         onSubmit={(e) => e.preventDefault()}
       >
-        <h1>Your Feedback Matters</h1>
+        <h1>{title}</h1>
         {fieldConfigs.map((config) => (
           <label key={config.name}>
             {config.label}
@@ -71,10 +80,10 @@ export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
         )}
         <div className="actions">
           <button type="button" onClick={onCancel}>
-            {CANCEL_BUTTON_LABEL}
+            {cancelLabel}
           </button>
           <button type="button" className="toss" onClick={onToss}>
-            {TOSS_BUTTON_LABEL}
+            {tossLabel}
           </button>
         </div>
       </form>

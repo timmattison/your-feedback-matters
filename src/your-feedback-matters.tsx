@@ -10,7 +10,14 @@ import {
 } from './core/feedback-machine';
 import { DEFAULT_FIELDS, type FieldConfig } from './core/fields';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
-import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
+import {
+  CANCEL_BUTTON_LABEL,
+  POWERED_BY_TEXT,
+  REOPEN_BUTTON_LABEL,
+  REPO_URL,
+  TITLE,
+  TOSS_BUTTON_LABEL,
+} from './core/copy';
 import { includeInSnapshot } from './core/snapshot-filter';
 import { captureWithFallback } from './core/capture-with-fallback';
 import { CAPTURE_TIMEOUT_MS } from './core/constants';
@@ -42,12 +49,26 @@ export interface YourFeedbackMattersProps {
    * never fire this. The widget stays storage-agnostic.
    */
   onSubmit?: (feedback: FormFields) => void;
+  /** Heading shown above the fields. Default 'Your Feedback Matters'. */
+  title?: string;
+  /** Label for the toss/submit button. Default 'Circular file, in style'. */
+  tossLabel?: string;
+  /** Label for the cancel button. Default 'Cancel'. */
+  cancelLabel?: string;
+  /** Label for the closed-landing reopen button. Default 'Got feedback?'. */
+  reopenLabel?: string;
+  /** Message shown when a blank form is tossed. Default the built-in scold. */
+  blankMessage?: string;
 }
 
 export function YourFeedbackMatters({
   mode,
   fields,
   onSubmit,
+  title = TITLE,
+  tossLabel = TOSS_BUTTON_LABEL,
+  cancelLabel = CANCEL_BUTTON_LABEL,
+  reopenLabel = REOPEN_BUTTON_LABEL,
 }: YourFeedbackMattersProps = {}) {
   // Resolved once per mount so a mid-session change to the media query or
   // WebGL support doesn't yank the user between rendering strategies
@@ -160,6 +181,9 @@ export function YourFeedbackMatters({
       ref={formRef}
       fieldConfigs={fieldConfigs}
       values={state.fields}
+      title={title}
+      tossLabel={tossLabel}
+      cancelLabel={cancelLabel}
       errorMessage={state.errorMessage}
       shaking={state.phase === 'error'}
       onFieldChange={(field, value) =>
@@ -208,7 +232,7 @@ export function YourFeedbackMatters({
         ))}
       {state.phase === 'closed' && (
         <button type="button" onClick={() => dispatch({ type: 'OPEN' })}>
-          {REOPEN_BUTTON_LABEL}
+          {reopenLabel}
         </button>
       )}
       {resolvedMode === 'full3d' && (
