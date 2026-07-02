@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react';
 import { useBox, useCylinder } from '@react-three/cannon';
 import * as THREE from 'three';
 import {
@@ -99,9 +100,14 @@ function WallSegment({
 }) {
   const angle = (index / WALL_SEGMENTS) * Math.PI * 2;
   const segmentWidth = (2 * Math.PI * BASKET_RADIUS) / WALL_SEGMENTS;
-  // full height (floor to mouth) so the wall stays sealed at the very bottom
-  const { position, quaternion, length } = slantTransform(angle);
-  useBox(() => ({
+  // full height (floor to mouth) so the wall stays sealed at the very bottom.
+  // Size-independent, so memoize it — that keeps the reposition effect below
+  // firing only when `base` actually moves (resize), not on every re-render.
+  const { position, quaternion, length } = useMemo(
+    () => slantTransform(angle),
+    [angle],
+  );
+  const [, api] = useBox(() => ({
     type: 'Static',
     args: [segmentWidth * 1.1, length, 0.05],
     position: [
@@ -111,6 +117,16 @@ function WallSegment({
     ],
     quaternion,
   }));
+  // The cannon factory runs once, so this static wall does NOT follow `base`
+  // when the basket slides to a new spot on window resize. Teleport it to match
+  // the visual wall, or paper passes straight through where the wall appears.
+  useEffect(() => {
+    api.position.set(
+      base[0] + position[0],
+      base[1] + position[1],
+      base[2] + position[2],
+    );
+  }, [api, base, position]);
   return null;
 }
 
@@ -179,11 +195,16 @@ function BasketFrame({ base }: { base: [number, number, number] }) {
 }
 
 export function Wastebasket({ base }: { base: [number, number, number] }) {
-  useCylinder(() => ({
+  const [, floorApi] = useCylinder(() => ({
     type: 'Static',
     args: [BASKET_RADIUS, BASKET_RADIUS, 0.05, 16],
     position: [base[0], base[1] + 0.05, base[2]],
   }));
+  // Keep the floor collider under the visual basket when it slides on resize
+  // (the useCylinder factory only runs once — see WallSegment above).
+  useEffect(() => {
+    floorApi.position.set(base[0], base[1] + 0.05, base[2]);
+  }, [floorApi, base]);
   return (
     <>
       {Array.from({ length: WALL_SEGMENTS }, (_, i) => (
