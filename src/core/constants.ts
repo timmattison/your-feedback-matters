@@ -23,10 +23,32 @@ export const PILE_IN_RADIUS = BASKET_RADIUS + 0.2;
 // When the basket slides in/out, each resting paper gets a random kick so the
 // pile jostles and the occasional one hops the rim and tumbles out. JOLT_UP is
 // the peak upward speed (m/s), JOLT_SIDE the peak sideways speed, JOLT_SPIN the
-// peak tumble. Tuned so most papers resettle and only a few go flying.
-export const JOLT_UP = 3.2;
-export const JOLT_SIDE = 2.2;
-export const JOLT_SPIN = 8;
+// peak tumble. Tuned so most papers resettle and only a few go flying — but the
+// kick has to actually launch a heavier, higher-damped wad, so it hits hard.
+export const JOLT_UP = 5;
+export const JOLT_SIDE = 3.4;
+export const JOLT_SPIN = 11;
+
+// Paper-ball rigid body. A crumpled wad is small, dense, and dead — it should
+// thud into the pile and stop, not roll and balance like a marble. So the body
+// is heavier than a toy sphere (BALL_MASS), sheds linear and (especially)
+// angular speed fast (BALL_*_DAMPING kills the endless rolling), and is allowed
+// to fall asleep once it is barely moving (BALL_SLEEP_*), which freezes the
+// micro-jitter that keeps a pile of spheres subtly creeping. The sleep speed
+// sits just above REST_SPEED_THRESHOLD so a ball reports "at rest" before it
+// nods off, and the sleep delay is long enough that the active toss always
+// reports its rest to the state machine first.
+export const BALL_MASS = 0.18;
+export const BALL_LINEAR_DAMPING = 0.4;
+export const BALL_ANGULAR_DAMPING = 0.75;
+export const BALL_SLEEP_SPEED_LIMIT = 0.18;
+export const BALL_SLEEP_TIME_LIMIT = 0.8;
+
+// Contact behavior for the whole world: grippy (papers don't slide off each
+// other and roll away) and nearly dead (a wad barely bounces off the floor or
+// the pile). Applied as the default contact material on the physics world.
+export const PILE_FRICTION = 0.55;
+export const PILE_RESTITUTION = 0.08;
 
 // Basket slide durations, in milliseconds. These MUST match the transition
 // timings in scene.css (`.scene-overlay` slide-in, `.scene-overlay--hidden`

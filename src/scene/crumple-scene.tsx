@@ -12,7 +12,10 @@ import {
   CAMERA_DISTANCE,
   CAMERA_FOV_DEG,
   GRAVITY_Y,
+  PILE_FRICTION,
+  PILE_RESTITUTION,
 } from '../core/constants';
+import { joltDelayMs } from '../core/jolt';
 import { CrumplingPaper } from './crumpling-paper';
 import { PaperBall } from './paper-ball';
 import { Wastebasket } from './wastebasket';
@@ -100,12 +103,21 @@ function SceneContents(props: CrumpleSceneProps) {
 
   // Bump a nonce whenever the basket slides (visible flips), which each resting
   // ball turns into a kick. Skip the initial mount — only actual slides jolt.
+  // The slide-IN kick is held until the basket has finished arriving on-screen
+  // (joltDelayMs); firing it at t=0 would scatter the pile while it is still off
+  // to the right, where nobody can see the papers go flying. If visibility flips
+  // again before a pending kick fires, the cleanup cancels the stale one.
   const [joltNonce, setJoltNonce] = useState(0);
   const lastVisible = useRef(props.visible);
   useEffect(() => {
     if (lastVisible.current === props.visible) return;
+    const becomingVisible = props.visible;
     lastVisible.current = props.visible;
-    setJoltNonce((n) => n + 1);
+    const timer = setTimeout(
+      () => setJoltNonce((n) => n + 1),
+      joltDelayMs(becomingVisible),
+    );
+    return () => clearTimeout(timer);
   }, [props.visible]);
 
   return (
@@ -116,7 +128,14 @@ function SceneContents(props: CrumpleSceneProps) {
       <directionalLight position={[4, 6, 8]} intensity={1.4} />
       {/* soft fill from the opposite side so the shadowed wall isn't pure black */}
       <directionalLight position={[-5, 2, -3]} intensity={0.35} />
-      <Physics gravity={[0, GRAVITY_Y, 0]}>
+      <Physics
+        gravity={[0, GRAVITY_Y, 0]}
+        allowSleep
+        defaultContactMaterial={{
+          friction: PILE_FRICTION,
+          restitution: PILE_RESTITUTION,
+        }}
+      >
         <Ground y={-worldH / 2 + 0.1} />
         <Wastebasket base={basketBase} />
         {props.phase === 'crumpling' &&

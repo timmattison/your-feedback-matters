@@ -5,6 +5,11 @@ import { planToss } from '../core/toss';
 import { boundingRadius } from '../core/bounding-radius';
 import { isBallInBasket } from '../core/basket-containment';
 import {
+  BALL_ANGULAR_DAMPING,
+  BALL_LINEAR_DAMPING,
+  BALL_MASS,
+  BALL_SLEEP_SPEED_LIMIT,
+  BALL_SLEEP_TIME_LIMIT,
   BASKET_RADIUS,
   JOLT_SIDE,
   JOLT_SPIN,
@@ -70,13 +75,18 @@ export function PaperBall({
   );
 
   const [ref, api] = useSphere(() => ({
-    mass: 0.05,
+    mass: BALL_MASS,
     args: [colliderRadius],
     position: startPosition,
     velocity: plan.velocity,
     angularVelocity: plan.angularVelocity,
-    linearDamping: 0.1,
-    angularDamping: 0.1,
+    // Heavier, high-damped, and allowed to sleep so a wad thuds to a stop and
+    // stays put instead of rolling/balancing forever (see constants.ts).
+    linearDamping: BALL_LINEAR_DAMPING,
+    angularDamping: BALL_ANGULAR_DAMPING,
+    allowSleep: true,
+    sleepSpeedLimit: BALL_SLEEP_SPEED_LIMIT,
+    sleepTimeLimit: BALL_SLEEP_TIME_LIMIT,
   }));
 
   // Latest transform + mutable flags, read inside the physics subscriptions so
@@ -141,6 +151,9 @@ export function PaperBall({
       return;
     }
     if (leavingRef.current || !restingRef.current) return;
+    // A resting ball has very likely fallen asleep; cannon skips integrating a
+    // sleeping body, so setting its velocity does nothing until we wake it.
+    api.wakeUp();
     api.velocity.set(
       (Math.random() - 0.5) * 2 * JOLT_SIDE,
       JOLT_UP * (0.4 + 0.6 * Math.random()),
@@ -151,7 +164,7 @@ export function PaperBall({
       (Math.random() - 0.5) * JOLT_SPIN,
       (Math.random() - 0.5) * JOLT_SPIN,
     );
-  }, [joltNonce, api.velocity, api.angularVelocity]);
+  }, [joltNonce, api]);
 
   const texture = useMemo(() => {
     if (snapshotUrl === null) return null;

@@ -5,14 +5,17 @@
   pointer-events: none;
   /* The basket sits bottom-right; slide the whole (transparent) overlay in
      from off the right edge. Slide-IN uses easeOutExpo — a fast launch that
-     decelerates into place, "smooth but fast". */
+     decelerates into place, "smooth but fast". The 0.7s here MUST match
+     SLIDE_IN_MS in core/constants.ts — the pile's slide-in jolt is timed to fire
+     as this transition finishes. */
   transform: translateX(0);
   transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
 
 /* Closed landing: parked off-screen right. Slide-OUT uses easeInExpo so the
-   basket accelerates away rather than crawling off. */
+   basket accelerates away rather than crawling off. The 0.5s here mirrors
+   SLIDE_OUT_MS in core/constants.ts. */
 .scene-overlay--hidden {
   transform: translateX(100%);
   transition: transform 0.5s cubic-bezier(0.7, 0, 0.84, 0);
