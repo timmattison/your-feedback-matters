@@ -10,10 +10,13 @@ export interface CrumpleField {
 }
 
 const FOLD_COUNT = 10;
-// Real crumpled paper settles at roughly half the area-preserving sphere
-// radius sqrt(A / 4π) — and the ball must still fit through the basket
-// mouth, so we pack tighter than a naive equal-area sphere would.
-const BALL_PACKING = 0.55;
+// Real crumpled paper settles at well under the area-preserving sphere radius
+// sqrt(A / 4π): a sheet wads down to a tight little knot. Packing this tightly
+// keeps each wad small relative to the basket mouth, so several nestle and pile
+// up instead of two fat balls filling the bin. (Everything downstream — the
+// collider radius and the toss — derives from this, so the wad stays consistent
+// in the air and on the floor.)
+const BALL_PACKING = 0.32;
 const RADIUS_JITTER = 0.22;
 
 interface Fold {
@@ -34,6 +37,14 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
 
 function lerp(a: number, b: number, k: number): number {
   return a + (b - a) * k;
+}
+
+// Shared crumple easing (easeInOutCubic). The forward crumple in
+// `scene/crumpling-paper.tsx` drives progress through this curve, and the
+// inspect un-/re-crumple (`core/inspect-crumple.ts`) reuses the very same curve
+// so fishing a wad out is provably the exact reverse of wadding it up.
+export function easeInOutCubic(x: number): number {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 }
 
 export function createCrumpleField(

@@ -36,3 +36,34 @@ export function domRectToWorld(
     ],
   };
 }
+
+export interface ScreenPoint {
+  x: number;
+  y: number;
+}
+
+// Inverse of domRectToWorld's center mapping: project a world point onto the screen
+// (pixels). Uses the same z = 0 / orthographic-per-pixel assumption as domRectToWorld,
+// so point[2] is ignored — wads rest near z = 0, where this is accurate.
+export function worldPointToScreen(
+  point: readonly [number, number, number],
+  viewport: Viewport,
+  cam: CameraSpec,
+): ScreenPoint {
+  const pixelsPerWorld = viewport.height / visibleWorldHeight(cam);
+  return {
+    x: point[0] * pixelsPerWorld + viewport.width / 2,
+    y: viewport.height / 2 - point[1] * pixelsPerWorld,
+  };
+}
+
+// Scale a world-space radius/length to its pixel size at the z = 0 plane. The exact
+// inverse of the worldPerPixel scaling used by domRectToWorld.
+export function worldRadiusToScreen(
+  r: number,
+  viewport: Viewport,
+  cam: CameraSpec,
+): number {
+  const pixelsPerWorld = viewport.height / visibleWorldHeight(cam);
+  return r * pixelsPerWorld;
+}

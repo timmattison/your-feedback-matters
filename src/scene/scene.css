@@ -3,11 +3,60 @@
   inset: 0;
   z-index: 10;
   pointer-events: none;
+  /* The basket sits bottom-right; slide the whole (transparent) overlay in
+     from off the right edge. Slide-IN uses easeOutExpo — a fast launch that
+     decelerates into place, "smooth but fast". The 0.7s here MUST match
+     SLIDE_IN_MS in core/constants.ts — the pile's slide-in jolt is timed to a
+     fraction of it (SLIDE_IN_SETTLE_FRACTION) so the kick lands on this curve's
+     visual stop, before its long, near-motionless tail. */
+  transform: translateX(0);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
-/* R3F sets pointer-events: auto inline on its container and canvas for its own
-   event system, which would swallow every click on the page. The scene never
-   needs pointer input, so force the whole subtree inert. */
+/* Closed landing: parked off-screen right. Slide-OUT uses easeInExpo so the
+   basket accelerates away rather than crawling off. The 0.5s here mirrors
+   SLIDE_OUT_MS in core/constants.ts. */
+.scene-overlay--hidden {
+  transform: translateX(100%);
+  transition: transform 0.5s cubic-bezier(0.7, 0, 0.84, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-overlay {
+    transition: none;
+  }
+}
+
+/* R3F sets pointer-events: auto inline on BOTH its <canvas> AND the wrapper
+   <div> it renders around it — either one, sitting full-viewport at z-index 10,
+   would swallow every click on the page. All picking here is DOM-driven (the
+   positioned .basket-hit-layer below), never R3F raycasting, so force the whole
+   R3F subtree inert. The overlay itself is already pointer-events: none; this
+   blanket rule covers every element R3F injects beneath it. */
 .scene-overlay * {
   pointer-events: none !important;
+}
+
+/* The basket hit-layer: mounted only while a wad is clickable (form idle +
+   browsing) and positioned over the basket's projected screen rect. It opts
+   back into pointer events so its clicks can be picked; everything else in the
+   overlay stays inert, so the centered form remains fully typeable. Declared
+   after (and !important like) the blanket rule above so it wins on equal
+   specificity — a pointer-events:none ancestor still lets a pointer-events:auto
+   descendant receive clicks. */
+.basket-hit-layer {
+  pointer-events: auto !important;
+}
+
+/* The dismiss catcher: a full-viewport transparent layer mounted only while a
+   note is fully open (inspect phase 'open'). Like the hit-layer it opts back
+   into pointer events (the overlay and its children are otherwise inert), so a
+   click ANYWHERE sends the open note re-crumpling back into the basket
+   (DISMISS). The centered form is `inert` while a note is open, so catching its
+   clicks here steals nothing the user could otherwise do. */
+.dismiss-catcher {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto !important;
 }

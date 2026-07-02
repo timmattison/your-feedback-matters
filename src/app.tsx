@@ -6,6 +6,9 @@ import { CrumpleScene } from './scene/crumple-scene';
 import { feedbackReducer, initialState } from './core/feedback-machine';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
 import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
+import { includeInSnapshot } from './core/snapshot-filter';
+import { captureWithFallback } from './core/capture-with-fallback';
+import { CAPTURE_TIMEOUT_MS } from './core/constants';
 
 // Class name and @keyframes name (src/app.css) for the css-mode toss.
 // The animationend handler keys on this exact animation name, so the class,
@@ -32,6 +35,9 @@ export function App({ mode }: AppProps = {}) {
   const [state, dispatch] = useReducer(feedbackReducer, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const [formRect, setFormRect] = useState<DOMRect | null>(null);
+  // True while the 3D scene has a fished-out note in the lightbox. The DOM form
+  // is marked `inert` so it can't be typed into behind the scrim.
+  const [inspecting, setInspecting] = useState(false);
 
   // The fallback modes (css, instant) have no 3D scene to hand the form off
   // to, so they keep it mounted and visible through the whole toss,
@@ -61,7 +67,7 @@ export function App({ mode }: AppProps = {}) {
     if (node === null) {
       // No form to snapshot or crumple (should be unreachable — the form
       // is always mounted while phase is 'capturing'). The 3D scene only
-      // mounts CrumplingPaper/TossedBall once formRect is set, so leaving
+      // mounts CrumplingPaper/PaperBall once formRect is set, so leaving
       // this at just CAPTURED would strand the machine in 'crumpling'
       // forever with no CRUMPLE_FINISHED ever firing. Walk the whole chain
       // by hand instead; the settling timer below takes it home from there.
@@ -72,13 +78,15 @@ export function App({ mode }: AppProps = {}) {
     }
     setFormRect(node.getBoundingClientRect());
     let cancelled = false;
-    toPng(node)
-      .then((url) => {
-        if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: url });
-      })
-      .catch(() => {
-        if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: null });
-      });
+    // Race the capture against a timeout: a rejected OR stalled toPng both fall
+    // back to a null (blank-textured) snapshot so the machine always leaves
+    // 'capturing' and the form can never freeze mid-toss.
+    captureWithFallback(
+      toPng(node, { filter: includeInSnapshot }),
+      CAPTURE_TIMEOUT_MS,
+    ).then((url) => {
+      if (!cancelled) dispatch({ type: 'CAPTURED', snapshotUrl: url });
+    });
     return () => {
       cancelled = true;
     };
@@ -121,6 +129,7 @@ export function App({ mode }: AppProps = {}) {
         })
       }
       onShakeEnd={() => dispatch({ type: 'SHAKE_ENDED' })}
+      inert={inspecting}
     />
   );
 
@@ -161,16 +170,20 @@ export function App({ mode }: AppProps = {}) {
       {resolvedMode === 'full3d' && (
         <CrumpleScene
           phase={state.phase}
+          visible={state.phase !== 'closed'}
           snapshotUrl={state.snapshotUrl}
           tossSeed={state.tossSeed}
           formRect={formRect}
           onCrumpleFinished={() => dispatch({ type: 'CRUMPLE_FINISHED' })}
           onBallRested={() => dispatch({ type: 'BALL_RESTED' })}
+          onInspectingChange={setInspecting}
         />
       )}
-      <footer className="powered-by">
-        <a href={REPO_URL}>{POWERED_BY_TEXT}</a>
-      </footer>
+      {state.phase !== 'closed' && (
+        <footer className="powered-by">
+          <a href={REPO_URL}>{POWERED_BY_TEXT}</a>
+        </footer>
+      )}
     </main>
   );
 }

@@ -11,6 +11,8 @@ export interface FeedbackFormProps {
   onCancel(): void;
   onToss(): void;
   onShakeEnd(): void;
+  /** When true, the form is marked `inert` so it can't be focused or typed into (e.g. while a note is inspected behind the scrim). */
+  inert?: boolean;
 }
 
 export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
@@ -23,6 +25,7 @@ export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
       onCancel,
       onToss,
       onShakeEnd,
+      inert,
     },
     ref,
   ) {
@@ -31,6 +34,7 @@ export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
         ref={ref}
         aria-label="Feedback form"
         className={`feedback-form${shaking ? ' shake' : ''}`}
+        inert={inert}
         onAnimationEnd={onShakeEnd}
         onSubmit={(e) => e.preventDefault()}
       >
