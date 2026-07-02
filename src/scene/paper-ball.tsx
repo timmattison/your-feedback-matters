@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { planToss } from '../core/toss';
 import { boundingRadius } from '../core/bounding-radius';
 import { isBallInBasket } from '../core/basket-containment';
+import { rideBasket } from '../core/ride-basket';
 import {
   BALL_ANGULAR_DAMPING,
   BALL_LINEAR_DAMPING,
@@ -109,6 +110,9 @@ export function PaperBall({
   isActiveRef.current = isActive;
   const basketBaseRef = useRef(basketBase);
   basketBaseRef.current = basketBase;
+  // The basket's position at the previous render, so the ride-basket effect can
+  // measure how far the basket slid when the viewport resizes.
+  const prevBasketBaseRef = useRef(basketBase);
   const quaternionRef = useRef<[number, number, number, number]>([0, 0, 0, 1]);
   const onRestedRef = useRef(onRested);
   onRestedRef.current = onRested;
@@ -193,6 +197,30 @@ export function PaperBall({
       (Math.random() - 0.5) * JOLT_SPIN,
     );
   }, [joltNonce, api]);
+
+  // Ride the basket on resize. When the viewport changes size the basket — walls,
+  // floor, ground, and the out-of-basket cull test — teleports to a new spot (see
+  // Wastebasket/Ground), but a wad's physics body lives in absolute world space
+  // and would be left behind, then culled for being outside the relocated basket.
+  // So when `basketBase` moves, slide a resting wad by the same delta; it keeps
+  // its place relative to the basket (still on the floor, still inside the rim).
+  // Only settled wads ride — an in-flight toss keeps its planned arc. Unlike the
+  // velocity jolt, no wakeUp is needed: setting a sleeping body's position moves
+  // it directly (and is broadcast to the mesh), and leaving it asleep avoids a
+  // pointless re-settle since it lands exactly where it was resting. Re-report the
+  // shifted pose so the DOM pick target tracks the wad to its new screen spot.
+  useEffect(() => {
+    const fromBase = prevBasketBaseRef.current;
+    prevBasketBaseRef.current = basketBase;
+    if (!restingRef.current || leavingRef.current) return;
+    const shifted = rideBasket(positionRef.current, fromBase, basketBase);
+    positionRef.current = shifted;
+    api.position.set(shifted[0], shifted[1], shifted[2]);
+    onRestPoseRef.current({
+      position: shifted,
+      quaternion: quaternionRef.current,
+    });
+  }, [basketBase, api]);
 
   const texture = useMemo(() => {
     if (snapshotUrl === null) return null;
