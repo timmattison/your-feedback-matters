@@ -45,3 +45,16 @@ test('theme="auto" adopts the dark palette when the OS prefers dark', () => {
   expect(overlayCss).toMatch(/prefers-color-scheme:\s*dark/);
   expect(overlayCss).toMatch(AUTO_OVERLAY);
 });
+
+// The README tells consumers a bare `.page { --yfm-*: … }` override wins and
+// "only the ones you override change". That only holds if the built-in dark
+// palettes DON'T outrank it. A plain `.page[data-yfm-theme='dark']` selector is
+// specificity (0,1,1) and beats a host's (0,1,0) `.page` rule, so on a dark
+// host the host's custom palette would silently lose. Wrapping both built-in
+// theme selectors in `:where(…)` drops them to zero specificity, so the host's
+// `.page` override always wins while the light `var()` fallbacks still apply
+// when nothing is defined.
+test('built-in theme palettes are zero-specificity (:where) so a host’s .page overrides win', () => {
+  expect(overlayCss).toMatch(/:where\(\s*\.page\[data-yfm-theme=['"]dark['"]\]\s*\)/);
+  expect(overlayCss).toMatch(/:where\(\s*\.page\[data-yfm-theme=['"]auto['"]\]\s*\)/);
+});
