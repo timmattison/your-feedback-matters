@@ -62,3 +62,40 @@ test('built-in theme palettes are zero-specificity (:where) so a host’s .page 
     /:where\(\s*\.page\[data-yfm-theme=['"]auto['"]\]\s*\)/,
   );
 });
+
+// The dark palette is written out TWICE with intentionally-identical bodies:
+// once for explicit `theme="dark"` and once for `theme="auto"` under
+// `prefers-color-scheme: dark`. Plain CSS can't share one declaration set across
+// a bare selector and an @media one, so the stylesheet's own comment tells the
+// author to "keep the two value sets in sync." Nothing enforced that, so editing
+// one `--yfm-*` value without the other (explicit-dark and auto-dark silently
+// drifting apart) would pass the exists-checks above green. This guard fails on
+// any such drift by comparing the two blocks declaration-for-declaration.
+//
+// Tiny, purpose-built extractor (not a general-purpose CSS parser, matching this
+// file's philosophy). Comments are stripped first because the specificity note
+// above quotes `.page[data-yfm-theme='dark']` in prose — so the raw marker is
+// NOT unique. With comments gone, each dark block's selector marker appears
+// exactly once, and its body holds only flat `--yfm-*: …;` declarations (no
+// nested braces), so slicing from the marker's next `{` to the next `}` is
+// unambiguous.
+const overlayCssNoComments = overlayCss.replace(/\/\*[\s\S]*?\*\//g, '');
+const paletteBody = (marker: string): string[] => {
+  const start = overlayCssNoComments.indexOf(marker);
+  expect(start).toBeGreaterThanOrEqual(0);
+  const open = overlayCssNoComments.indexOf('{', start);
+  const close = overlayCssNoComments.indexOf('}', open);
+  return overlayCssNoComments
+    .slice(open + 1, close)
+    .split(';')
+    .map((decl) => decl.trim())
+    .filter((decl) => decl.length > 0);
+};
+
+test('the explicit-dark and auto-dark palette blocks stay byte-identical', () => {
+  const explicitDark = paletteBody("data-yfm-theme='dark'");
+  const autoDark = paletteBody("data-yfm-theme='auto'");
+  // Same declarations, same order, same values — a changed/dropped/added value
+  // in either block breaks this.
+  expect(autoDark).toEqual(explicitDark);
+});
