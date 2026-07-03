@@ -55,6 +55,10 @@ test('theme="auto" adopts the dark palette when the OS prefers dark', () => {
 // `.page` override always wins while the light `var()` fallbacks still apply
 // when nothing is defined.
 test('built-in theme palettes are zero-specificity (:where) so a host’s .page overrides win', () => {
-  expect(overlayCss).toMatch(/:where\(\s*\.page\[data-yfm-theme=['"]dark['"]\]\s*\)/);
-  expect(overlayCss).toMatch(/:where\(\s*\.page\[data-yfm-theme=['"]auto['"]\]\s*\)/);
+  expect(overlayCss).toMatch(
+    /:where\(\s*\.page\[data-yfm-theme=['"]dark['"]\]\s*\)/,
+  );
+  expect(overlayCss).toMatch(
+    /:where\(\s*\.page\[data-yfm-theme=['"]auto['"]\]\s*\)/,
+  );
 });

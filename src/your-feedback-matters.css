@@ -49,8 +49,15 @@
    even on a dark-OS host. The two blocks are intentionally duplicated: plain
    CSS can't share a declaration set across a bare selector and an @media one,
    and doing it in CSS (not JS) means `auto` darkens with zero JS and no flash
-   of light before hydration. Keep the two value sets in sync. */
-.page[data-yfm-theme='dark'] {
+   of light before hydration. Keep the two value sets in sync.
+
+   Both selectors are wrapped in `:where(…)` so they carry ZERO specificity.
+   Without that, `.page[data-yfm-theme='dark']` (0,1,1) would outrank a host's
+   own `.page { --yfm-*: … }` override (0,1,0) — so a dark-OS visitor would see
+   the stock dark palette instead of the host's custom one, contradicting the
+   README. At zero specificity the host's `.page` override always wins, while
+   the light `var(…, fallback)` defaults still apply when nothing is set. */
+:where(.page[data-yfm-theme='dark']) {
   --yfm-paper: #1c1f26;
   --yfm-ink: #e8eaed;
   --yfm-border: #333842;
@@ -71,7 +78,7 @@
   --yfm-badge-ink: #f1f3f6;
 }
 @media (prefers-color-scheme: dark) {
-  .page[data-yfm-theme='auto'] {
+  :where(.page[data-yfm-theme='auto']) {
     --yfm-paper: #1c1f26;
     --yfm-ink: #e8eaed;
     --yfm-border: #333842;
