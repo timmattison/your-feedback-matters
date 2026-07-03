@@ -108,6 +108,14 @@ test('poweredBy={{ text, href }} renders a custom badge once opened', async () =
   );
 });
 
+test('the overlay advertises its theme so the stylesheet can dark-mode it (defaults to auto)', () => {
+  const { container } = render(<YourFeedbackMatters />);
+  expect(container.querySelector('.page')).toHaveAttribute(
+    'data-yfm-theme',
+    'auto',
+  );
+});
+
 test('the page lands on the "Got feedback?" button, not the form', () => {
   render(<YourFeedbackMatters />);
   expect(
