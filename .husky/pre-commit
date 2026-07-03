@@ -1,5 +1,6 @@
 pnpm exec lint-staged
-pnpm exec prettier --check "src/**/*.{ts,tsx,css}" "scripts/**/*.ts"
-pnpm exec oxlint --deny-warnings src scripts
+pnpm exec prettier --check "src/**/*.{ts,tsx,css}" "apps/**/*.{ts,tsx,css}" "scripts/**/*.ts"
+pnpm exec oxlint --deny-warnings src apps scripts
 pnpm exec tsc -b
+pnpm --filter your-feedback-matters-demo exec tsc --noEmit
 pnpm exec vitest run

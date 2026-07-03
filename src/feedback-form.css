@@ -1,9 +1,28 @@
+/* Self-contained box model so the form's width/padding math holds even when
+   FeedbackForm is used standalone (it's an exported component) on a host that
+   ships no `box-sizing: border-box` reset. */
+.feedback-form,
+.feedback-form *,
+.feedback-form *::before,
+.feedback-form *::after {
+  box-sizing: border-box;
+}
 .feedback-form {
   width: min(26rem, 90vw);
-  background: #fdfdf8;
-  border: 1px solid #ddd;
+  /* Paint from `--yfm-*` theme variables with the light "paper" look baked in
+     as each var()'s fallback. Two things fall out of this:
+       1. The form OWNS its colors — a host that themes `color`/`background`
+          (e.g. a dark theme setting `body { color: … }`) can't cascade
+          unreadable near-white text into this card; the var() wins.
+       2. It's themeable — when the overlay resolves to dark it redefines these
+          variables (see your-feedback-matters.css) and the whole card repaints.
+          With no `.page` wrapper (standalone <FeedbackForm>) no variable is
+          defined, so every fallback applies and it stays light. */
+  background: var(--yfm-paper, #fdfdf8);
+  color: var(--yfm-ink, #23262b);
+  border: 1px solid var(--yfm-border, #ddd);
   border-radius: 4px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 30px var(--yfm-shadow, rgba(0, 0, 0, 0.12));
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -18,18 +37,65 @@
 .feedback-form input,
 .feedback-form textarea {
   font: inherit;
+  /* Explicit control colors: typed feedback must stay visible even when the
+     host themes text color or resets form-control backgrounds. Themeable via
+     the same variables so the fields darken with the rest of the card. */
+  color: var(--yfm-ink, #23262b);
+  background: var(--yfm-field-bg, #ffffff);
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--yfm-field-border, #ccc);
   border-radius: 3px;
 }
 .blank-scolding {
-  color: #c0392b;
+  color: var(--yfm-danger, #c0392b);
   margin: 0;
 }
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+.feedback-form .actions button {
+  /* Explicit chrome instead of the browser's default button styling — a host
+     reset (e.g. Tailwind's preflight) strips that, leaving the toss/cancel
+     buttons as plain text. Scoped under `.feedback-form` for enough
+     specificity to win over such resets, and theme-variable driven so the
+     buttons repaint with the card. */
+  font: inherit;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--yfm-btn-border, #cfcfc4);
+  border-radius: 4px;
+  background: var(--yfm-btn-bg, #f0f0e6);
+  color: var(--yfm-ink, #23262b);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.05s ease;
+}
+.feedback-form .actions button:hover {
+  background: var(--yfm-btn-bg-hover, #e7e7db);
+  border-color: var(--yfm-btn-border-hover, #b9b9a8);
+}
+.feedback-form .actions button:active {
+  transform: translateY(1px);
+}
+.feedback-form .actions button:focus-visible {
+  outline: 2px solid var(--yfm-ink, #23262b);
+  outline-offset: 2px;
+}
+/* The toss button is the primary action — a filled, high-contrast slab. In the
+   dark theme --yfm-accent flips light (with dark ink), mirroring the light
+   theme's dark-on-light so it stays the loudest control either way. */
+.feedback-form .actions button.toss {
+  background: var(--yfm-accent, #23262b);
+  border-color: var(--yfm-accent, #23262b);
+  color: var(--yfm-accent-ink, #fdfdf8);
+}
+.feedback-form .actions button.toss:hover {
+  background: var(--yfm-accent-hover, #34383f);
+  border-color: var(--yfm-accent-hover, #34383f);
 }
 .shake {
   animation: shake 0.5s ease-in-out;

@@ -1,4 +1,14 @@
-import { pickAnimationMode } from './animation-mode';
+import { detectAnimationMode, pickAnimationMode } from './animation-mode';
+
+test('detectAnimationMode returns instant (no throw) when window/document are absent (SSR)', () => {
+  vi.stubGlobal('window', undefined);
+  vi.stubGlobal('document', undefined);
+  try {
+    expect(detectAnimationMode()).toBe('instant');
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
 
 test('reduced motion wins over everything', () => {
   expect(

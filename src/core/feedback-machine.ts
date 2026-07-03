@@ -6,13 +6,12 @@ export type Phase =
   | 'crumpling'
   | 'tossing'
   | 'settling';
-export interface FormFields {
-  name: string;
-  comment: string;
-}
+export type FormFields = Record<string, string>;
 export interface FeedbackState {
   phase: Phase;
   fields: FormFields;
+  /** Names of the fields that must be non-blank for a toss to be accepted. */
+  requiredFields: readonly string[];
   errorMessage: string | null;
   tossSeed: number;
   snapshotUrl: string | null;
@@ -20,8 +19,8 @@ export interface FeedbackState {
 export type FeedbackEvent =
   | { type: 'OPEN' }
   | { type: 'CANCEL' }
-  | { type: 'FIELD_CHANGED'; field: keyof FormFields; value: string }
-  | { type: 'TOSS_REQUESTED'; seed: number }
+  | { type: 'FIELD_CHANGED'; field: string; value: string }
+  | { type: 'TOSS_REQUESTED'; seed: number; blankMessage?: string }
   | { type: 'SHAKE_ENDED' }
   | { type: 'CAPTURED'; snapshotUrl: string | null }
   | { type: 'CRUMPLE_FINISHED' }
@@ -29,20 +28,58 @@ export type FeedbackEvent =
   | { type: 'SETTLE_FINISHED' };
 
 import { BLANK_FEEDBACK_MESSAGE } from './copy';
+import { DEFAULT_FIELDS, type FieldConfig } from './fields';
 
-// The app lands closed: a "Got feedback?" button, no form, and the basket
-// slid off-screen. OPEN summons the form (and slides the basket in); CANCEL
-// and a completed toss (SETTLE_FINISHED, via this same shape) return here.
-export const initialState: FeedbackState = {
-  phase: 'closed',
-  fields: { name: '', comment: '' },
-  errorMessage: null,
-  tossSeed: 0,
-  snapshotUrl: null,
-};
+// Builds the closed-landing state for a given field configuration: every field
+// starts empty, and a field is required unless its config opts out
+// (`required: false`). The app lands closed — a "Got feedback?" button, no
+// form, and the basket slid off-screen. OPEN summons the form (and slides the
+// basket in); CANCEL and a completed toss (SETTLE_FINISHED) return here.
+export function createInitialState(
+  fieldConfigs: readonly FieldConfig[],
+): FeedbackState {
+  const fields: FormFields = {};
+  const requiredFields: string[] = [];
+  for (const config of fieldConfigs) {
+    fields[config.name] = '';
+    if (config.required ?? true) requiredFields.push(config.name);
+  }
+  return {
+    phase: 'closed',
+    fields,
+    requiredFields,
+    errorMessage: null,
+    tossSeed: 0,
+    snapshotUrl: null,
+  };
+}
 
-export function isBlank(fields: FormFields): boolean {
-  return fields.name.trim() === '' || fields.comment.trim() === '';
+export const initialState: FeedbackState = createInitialState(DEFAULT_FIELDS);
+
+// Resets to the closed landing while preserving the CURRENT field set: values
+// are cleared but the keys (and the required set) are kept, so a consumer's
+// custom fields survive a cancel or a completed toss.
+function resetState(state: FeedbackState): FeedbackState {
+  const fields: FormFields = {};
+  for (const name of Object.keys(state.fields)) fields[name] = '';
+  return {
+    phase: 'closed',
+    fields,
+    requiredFields: state.requiredFields,
+    errorMessage: null,
+    tossSeed: 0,
+    snapshotUrl: null,
+  };
+}
+
+// True when ANY required field is blank after trimming. When no explicit
+// required set is given, every present field is treated as required (keeps the
+// original 1-arg callers behaving identically).
+export function isBlank(
+  fields: FormFields,
+  requiredFields: readonly string[] = Object.keys(fields),
+): boolean {
+  return requiredFields.some((name) => (fields[name] ?? '').trim() === '');
 }
 
 export function feedbackReducer(
@@ -54,7 +91,7 @@ export function feedbackReducer(
       return state.phase === 'closed' ? { ...state, phase: 'idle' } : state;
     case 'CANCEL':
       return state.phase === 'idle' || state.phase === 'error'
-        ? { ...initialState, phase: 'closed' }
+        ? resetState(state)
         : state;
     case 'FIELD_CHANGED':
       return state.phase === 'idle' || state.phase === 'error'
@@ -66,8 +103,12 @@ export function feedbackReducer(
         : state;
     case 'TOSS_REQUESTED':
       if (state.phase !== 'idle' && state.phase !== 'error') return state;
-      return isBlank(state.fields)
-        ? { ...state, phase: 'error', errorMessage: BLANK_FEEDBACK_MESSAGE }
+      return isBlank(state.fields, state.requiredFields)
+        ? {
+            ...state,
+            phase: 'error',
+            errorMessage: event.blankMessage ?? BLANK_FEEDBACK_MESSAGE,
+          }
         : {
             ...state,
             phase: 'capturing',
@@ -89,7 +130,7 @@ export function feedbackReducer(
         ? { ...state, phase: 'settling' }
         : state;
     case 'SETTLE_FINISHED':
-      return state.phase === 'settling' ? { ...initialState } : state;
+      return state.phase === 'settling' ? resetState(state) : state;
     default:
       return state;
   }

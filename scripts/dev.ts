@@ -4,7 +4,9 @@
  *
  * 1. Installs dependencies (pnpm install)
  * 2. Finds a free port with portplz (install: cargo install portplz)
- * 3. Starts Vite on that port and opens the browser at the main page
+ * 3. Starts the demo app's Vite server on that port and opens the browser
+ *    at the main page. The root package is the publishable widget (a library,
+ *    with no runnable page of its own); the demo in apps/demo is what renders.
  *
  * Usage:
  *   ./scripts/dev.ts
@@ -15,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { buildViteArgs, parsePort } from './dev-utils.ts';
 
 const projectRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const demoDir = path.join(projectRoot, 'apps', 'demo');
 
 function fail(message: string): never {
   console.error(`✖ ${message}`);
@@ -42,7 +45,7 @@ if (port === null) {
 
 console.log(`▶ Starting Vite on http://localhost:${port} ...`);
 const vite = spawn('pnpm', buildViteArgs(port), {
-  cwd: projectRoot,
+  cwd: demoDir,
   stdio: 'inherit',
 });
 vite.on('error', (error) => {

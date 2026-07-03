@@ -1,21 +1,52 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import './app.css';
+import './your-feedback-matters.css';
 import { FeedbackForm } from './feedback-form';
 import { CrumpleScene } from './scene/crumple-scene';
-import { feedbackReducer, initialState } from './core/feedback-machine';
+import {
+  createInitialState,
+  feedbackReducer,
+  type FormFields,
+} from './core/feedback-machine';
+import { DEFAULT_FIELDS, type FieldConfig } from './core/fields';
 import { detectAnimationMode, type AnimationMode } from './core/animation-mode';
-import { POWERED_BY_TEXT, REOPEN_BUTTON_LABEL, REPO_URL } from './core/copy';
+import {
+  CANCEL_BUTTON_LABEL,
+  POWERED_BY_TEXT,
+  REOPEN_BUTTON_LABEL,
+  REPO_URL,
+  TITLE,
+  TOSS_BUTTON_LABEL,
+} from './core/copy';
 import { includeInSnapshot } from './core/snapshot-filter';
 import { captureWithFallback } from './core/capture-with-fallback';
 import { CAPTURE_TIMEOUT_MS } from './core/constants';
 
-// Class name and @keyframes name (src/app.css) for the css-mode toss.
+// Class name and @keyframes name (src/your-feedback-matters.css) for the
+// css-mode toss.
 // The animationend handler keys on this exact animation name, so the class,
 // the keyframes, and the guard must all agree.
 const CSS_TOSS_ANIMATION = 'css-toss';
 
-export interface AppProps {
+/**
+ * Controls the "Powered by" footer badge.
+ * - `true` (default): show the built-in badge linking to this project.
+ * - `false`: hide the badge entirely (so a host doesn't ship a link back here).
+ * - `{ text, href }`: show a custom badge with your own label + link.
+ */
+export type PoweredBy = boolean | { text: string; href: string };
+
+/**
+ * Color theme for the widget's paper form + "Powered by" badge.
+ * - `'auto'` (default): follow the OS via `prefers-color-scheme` — light on a
+ *   light OS, dark on a dark one. Zero-JS: the dark palette is applied purely
+ *   in CSS, so it works before hydration with no flash of light.
+ * - `'dark'` / `'light'`: force that look regardless of the OS — e.g. `'dark'`
+ *   for a site that is always dark independent of the visitor's OS setting.
+ */
+export type WidgetTheme = 'light' | 'dark' | 'auto';
+
+export interface YourFeedbackMattersProps {
   /**
    * Forces the animation mode instead of auto-detecting it via
    * {@link detectAnimationMode}. Intended for tests; production callers
@@ -23,16 +54,84 @@ export interface AppProps {
    * (prefers-reduced-motion + WebGL availability).
    */
   mode?: AnimationMode;
+  /**
+   * The form fields to collect, in order. Defaults to a Name text field and a
+   * Comment textarea. Like {@link mode}, this is read once at mount — changing
+   * it afterwards has no effect.
+   */
+  fields?: FieldConfig[];
+  /**
+   * Called once with the collected field values the moment a non-blank toss is
+   * accepted (before the crumple animation). The host decides what to do with
+   * the feedback — POST it, store it, etc. Blank tosses (which shake + scold)
+   * never fire this. The widget stays storage-agnostic.
+   */
+  onSubmit?: (feedback: FormFields) => void;
+  /** Heading shown above the fields. Default 'Your Feedback Matters'. */
+  title?: string;
+  /** Label for the toss/submit button. Default 'Circular file, in style'. */
+  tossLabel?: string;
+  /** Label for the cancel button. Default 'Cancel'. */
+  cancelLabel?: string;
+  /** Label for the closed-landing reopen button. Default 'Got feedback?'. */
+  reopenLabel?: string;
+  /** Message shown when a blank form is tossed. Default the built-in scold. */
+  blankMessage?: string;
+  /**
+   * Controls the "Powered by" footer badge. Defaults to `true` (the built-in
+   * badge linking to this project). Pass `false` to hide it, or
+   * `{ text, href }` to show your own label + link. See {@link PoweredBy}.
+   */
+  poweredBy?: PoweredBy;
+  /**
+   * Color theme for the form + badge. Defaults to `'auto'` (follows
+   * `prefers-color-scheme`). Pass `'dark'` or `'light'` to force it — e.g.
+   * `'dark'` on a site that's always dark regardless of the visitor's OS.
+   * See {@link WidgetTheme}.
+   */
+  theme?: WidgetTheme;
 }
 
-export function App({ mode }: AppProps = {}) {
-  // Resolved once per mount so a mid-session change to the media query or
-  // WebGL support doesn't yank the user between rendering strategies
-  // mid-animation.
-  const [resolvedMode] = useState<AnimationMode>(
-    () => mode ?? detectAnimationMode(),
+export function YourFeedbackMatters({
+  mode,
+  fields,
+  onSubmit,
+  title = TITLE,
+  tossLabel = TOSS_BUTTON_LABEL,
+  cancelLabel = CANCEL_BUTTON_LABEL,
+  reopenLabel = REOPEN_BUTTON_LABEL,
+  blankMessage,
+  poweredBy = true,
+  theme = 'auto',
+}: YourFeedbackMattersProps = {}) {
+  const showPoweredBy = poweredBy !== false;
+  const poweredByText =
+    typeof poweredBy === 'object' ? poweredBy.text : POWERED_BY_TEXT;
+  const poweredByHref =
+    typeof poweredBy === 'object' ? poweredBy.href : REPO_URL;
+  // Render a deterministic default on the server AND on the client's first
+  // (hydration) render so the two match, then upgrade to the environment's
+  // real mode once, after mount. detectAnimationMode() only runs in the effect,
+  // never during render, so `window` is never touched on the server — and a
+  // mid-session change to the media query or WebGL support can't yank the user
+  // between rendering strategies mid-animation (it's read exactly once).
+  const [resolvedMode, setResolvedMode] = useState<AnimationMode>(
+    () => mode ?? 'instant',
   );
-  const [state, dispatch] = useReducer(feedbackReducer, initialState);
+  useEffect(() => {
+    if (mode === undefined) setResolvedMode(detectAnimationMode());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+  // Read once at mount, like `mode`: the initial reducer state derives its
+  // field keys and required set from this configuration.
+  const [fieldConfigs] = useState<readonly FieldConfig[]>(
+    () => fields ?? DEFAULT_FIELDS,
+  );
+  const [state, dispatch] = useReducer(
+    feedbackReducer,
+    fieldConfigs,
+    createInitialState,
+  );
   const formRef = useRef<HTMLFormElement>(null);
   const [formRect, setFormRect] = useState<DOMRect | null>(null);
   // True while the 3D scene has a fished-out note in the lightbox. The DOM form
@@ -92,6 +191,17 @@ export function App({ mode }: AppProps = {}) {
     };
   }, [state.phase, resolvedMode]);
 
+  // Hand the accepted feedback to the host exactly once per toss. Entering
+  // 'capturing' IS the accepted-toss transition (blank tosses go to 'error'
+  // instead and never reach here), and every mode passes through 'capturing',
+  // so this fires once per toss in all modes and never for a blank one.
+  // deps intentionally [state.phase] to fire once per toss, matching the other
+  // phase-keyed effects in this file — not on onSubmit/state.fields identity.
+  useEffect(() => {
+    if (state.phase === 'capturing') onSubmit?.(state.fields);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
+
   // Fallback modes have no physics toss: as soon as the crumple "starts",
   // walk the machine straight through to settling. A CSS animation (css
   // mode) or a brief fade (instant mode) stands in for the toss instead.
@@ -115,7 +225,11 @@ export function App({ mode }: AppProps = {}) {
   const formElement = (
     <FeedbackForm
       ref={formRef}
-      fields={state.fields}
+      fieldConfigs={fieldConfigs}
+      values={state.fields}
+      title={title}
+      tossLabel={tossLabel}
+      cancelLabel={cancelLabel}
       errorMessage={state.errorMessage}
       shaking={state.phase === 'error'}
       onFieldChange={(field, value) =>
@@ -126,6 +240,7 @@ export function App({ mode }: AppProps = {}) {
         dispatch({
           type: 'TOSS_REQUESTED',
           seed: Math.floor(Math.random() * 2 ** 32),
+          blankMessage,
         })
       }
       onShakeEnd={() => dispatch({ type: 'SHAKE_ENDED' })}
@@ -134,7 +249,9 @@ export function App({ mode }: AppProps = {}) {
   );
 
   return (
-    <main className="page">
+    // data-yfm-theme drives the CSS palette (see your-feedback-matters.css):
+    // 'auto' follows prefers-color-scheme, 'dark'/'light' force it.
+    <main className="page" data-yfm-theme={theme}>
       {formVisible &&
         (resolvedMode === 'full3d' ? (
           formElement
@@ -163,8 +280,12 @@ export function App({ mode }: AppProps = {}) {
           </div>
         ))}
       {state.phase === 'closed' && (
-        <button type="button" onClick={() => dispatch({ type: 'OPEN' })}>
-          {REOPEN_BUTTON_LABEL}
+        <button
+          type="button"
+          className="reopen"
+          onClick={() => dispatch({ type: 'OPEN' })}
+        >
+          {reopenLabel}
         </button>
       )}
       {resolvedMode === 'full3d' && (
@@ -179,9 +300,9 @@ export function App({ mode }: AppProps = {}) {
           onInspectingChange={setInspecting}
         />
       )}
-      {state.phase !== 'closed' && (
+      {state.phase !== 'closed' && showPoweredBy && (
         <footer className="powered-by">
-          <a href={REPO_URL}>{POWERED_BY_TEXT}</a>
+          <a href={poweredByHref}>{poweredByText}</a>
         </footer>
       )}
     </main>
