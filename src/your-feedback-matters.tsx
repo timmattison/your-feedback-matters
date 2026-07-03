@@ -36,6 +36,16 @@ const CSS_TOSS_ANIMATION = 'css-toss';
  */
 export type PoweredBy = boolean | { text: string; href: string };
 
+/**
+ * Color theme for the widget's paper form + "Powered by" badge.
+ * - `'auto'` (default): follow the OS via `prefers-color-scheme` — light on a
+ *   light OS, dark on a dark one. Zero-JS: the dark palette is applied purely
+ *   in CSS, so it works before hydration with no flash of light.
+ * - `'dark'` / `'light'`: force that look regardless of the OS — e.g. `'dark'`
+ *   for a site that is always dark independent of the visitor's OS setting.
+ */
+export type WidgetTheme = 'light' | 'dark' | 'auto';
+
 export interface YourFeedbackMattersProps {
   /**
    * Forces the animation mode instead of auto-detecting it via
@@ -73,6 +83,13 @@ export interface YourFeedbackMattersProps {
    * `{ text, href }` to show your own label + link. See {@link PoweredBy}.
    */
   poweredBy?: PoweredBy;
+  /**
+   * Color theme for the form + badge. Defaults to `'auto'` (follows
+   * `prefers-color-scheme`). Pass `'dark'` or `'light'` to force it — e.g.
+   * `'dark'` on a site that's always dark regardless of the visitor's OS.
+   * See {@link WidgetTheme}.
+   */
+  theme?: WidgetTheme;
 }
 
 export function YourFeedbackMatters({
@@ -85,6 +102,7 @@ export function YourFeedbackMatters({
   reopenLabel = REOPEN_BUTTON_LABEL,
   blankMessage,
   poweredBy = true,
+  theme = 'auto',
 }: YourFeedbackMattersProps = {}) {
   const showPoweredBy = poweredBy !== false;
   const poweredByText =
@@ -231,7 +249,9 @@ export function YourFeedbackMatters({
   );
 
   return (
-    <main className="page">
+    // data-yfm-theme drives the CSS palette (see your-feedback-matters.css):
+    // 'auto' follows prefers-color-scheme, 'dark'/'light' force it.
+    <main className="page" data-yfm-theme={theme}>
       {formVisible &&
         (resolvedMode === 'full3d' ? (
           formElement

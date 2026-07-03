@@ -109,11 +109,15 @@ test('poweredBy={{ text, href }} renders a custom badge once opened', async () =
 });
 
 test('the overlay advertises its theme so the stylesheet can dark-mode it (defaults to auto)', () => {
-  const { container } = render(<YourFeedbackMatters />);
-  expect(container.querySelector('.page')).toHaveAttribute(
-    'data-yfm-theme',
-    'auto',
-  );
+  const { container, rerender } = render(<YourFeedbackMatters />);
+  const page = () => container.querySelector('.page');
+  // default follows the OS via prefers-color-scheme
+  expect(page()).toHaveAttribute('data-yfm-theme', 'auto');
+  // explicit values force the look regardless of the OS
+  rerender(<YourFeedbackMatters theme="dark" />);
+  expect(page()).toHaveAttribute('data-yfm-theme', 'dark');
+  rerender(<YourFeedbackMatters theme="light" />);
+  expect(page()).toHaveAttribute('data-yfm-theme', 'light');
 });
 
 test('the page lands on the "Got feedback?" button, not the form', () => {

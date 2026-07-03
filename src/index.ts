@@ -9,6 +9,7 @@ export {
   YourFeedbackMatters,
   type YourFeedbackMattersProps,
   type PoweredBy,
+  type WidgetTheme,
 } from './your-feedback-matters';
 
 // Lower-level building blocks for advanced consumers who want to compose the

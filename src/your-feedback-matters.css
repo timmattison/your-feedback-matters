@@ -35,6 +35,63 @@
 .page *::after {
   box-sizing: border-box;
 }
+
+/* --- Theme palette --------------------------------------------------------
+   The form and the "Powered by" badge read their colors from `--yfm-*` custom
+   properties whose light-mode defaults live in each `var(…, fallback)` call
+   (see feedback-form.css / .powered-by). The `theme` prop reflects onto
+   `.page[data-yfm-theme]`; the two rules below REDEFINE the palette to a dark
+   set — once for an explicit `theme="dark"`, and once for `theme="auto"` when
+   the OS prefers dark. Everything inherits down to the form + badge, so the
+   whole overlay repaints from these ~16 declarations.
+
+   theme="light" matches neither rule, so its `var()` fallbacks keep it light
+   even on a dark-OS host. The two blocks are intentionally duplicated: plain
+   CSS can't share a declaration set across a bare selector and an @media one,
+   and doing it in CSS (not JS) means `auto` darkens with zero JS and no flash
+   of light before hydration. Keep the two value sets in sync. */
+.page[data-yfm-theme='dark'] {
+  --yfm-paper: #1c1f26;
+  --yfm-ink: #e8eaed;
+  --yfm-border: #333842;
+  --yfm-shadow: rgba(0, 0, 0, 0.5);
+  --yfm-field-bg: #12151a;
+  --yfm-field-border: #3a3f4b;
+  --yfm-danger: #ff6b5e;
+  --yfm-btn-bg: #2a2f38;
+  --yfm-btn-border: #3a3f4b;
+  --yfm-btn-bg-hover: #333945;
+  --yfm-btn-border-hover: #4a5160;
+  --yfm-accent: #e8eaed;
+  --yfm-accent-ink: #1c1f26;
+  --yfm-accent-hover: #d0d3d8;
+  --yfm-badge-bg: rgba(24, 26, 30, 0.74);
+  --yfm-badge-border: rgba(255, 255, 255, 0.16);
+  --yfm-badge-shadow: rgba(0, 0, 0, 0.45);
+  --yfm-badge-ink: #f1f3f6;
+}
+@media (prefers-color-scheme: dark) {
+  .page[data-yfm-theme='auto'] {
+    --yfm-paper: #1c1f26;
+    --yfm-ink: #e8eaed;
+    --yfm-border: #333842;
+    --yfm-shadow: rgba(0, 0, 0, 0.5);
+    --yfm-field-bg: #12151a;
+    --yfm-field-border: #3a3f4b;
+    --yfm-danger: #ff6b5e;
+    --yfm-btn-bg: #2a2f38;
+    --yfm-btn-border: #3a3f4b;
+    --yfm-btn-bg-hover: #333945;
+    --yfm-btn-border-hover: #4a5160;
+    --yfm-accent: #e8eaed;
+    --yfm-accent-ink: #1c1f26;
+    --yfm-accent-hover: #d0d3d8;
+    --yfm-badge-bg: rgba(24, 26, 30, 0.74);
+    --yfm-badge-border: rgba(255, 255, 255, 0.16);
+    --yfm-badge-shadow: rgba(0, 0, 0, 0.45);
+    --yfm-badge-ink: #f1f3f6;
+  }
+}
 /* Re-enable interaction only on the interactive islands; the empty space around
    them and the transparent 3D scene canvas stay click-through so the host page
    underneath remains fully usable. (The scene's own hit-layer / dismiss-catcher
@@ -56,9 +113,9 @@
      (the page, the can, or a dark theme) rather than directly on the artwork. */
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.14);
+  background: var(--yfm-badge-bg, rgba(255, 255, 255, 0.82));
+  border: 1px solid var(--yfm-badge-border, rgba(0, 0, 0, 0.08));
+  box-shadow: 0 1px 6px var(--yfm-badge-shadow, rgba(0, 0, 0, 0.14));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   /* Mounts only once the form is open (see App); fade it in so it arrives
@@ -79,25 +136,12 @@
   }
 }
 .powered-by a {
-  color: #23262b;
+  color: var(--yfm-badge-ink, #23262b);
   text-decoration: none;
   font-weight: 600;
 }
 .powered-by a:hover {
   text-decoration: underline;
-}
-
-/* On a dark theme, flip the pill dark with light text so it stays legible
-   instead of glowing white in the corner. */
-@media (prefers-color-scheme: dark) {
-  .powered-by {
-    background: rgba(24, 26, 30, 0.74);
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-  }
-  .powered-by a {
-    color: #f1f3f6;
-  }
 }
 
 /* css fallback (no WebGL): the crumpling paper physics is faked with a

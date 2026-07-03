@@ -88,21 +88,22 @@ By default a small "Powered by Your Feedback Matters" badge links back to this p
 
 All props are optional.
 
-| Prop           | Type                                        | Default                     | Description                                                                                                                            |
-| -------------- | ------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `onSubmit`     | `(feedback: Record<string,string>) => void` | —                           | Called once with the field values the moment a non-blank toss is accepted. Blank tosses (which shake + scold) never fire it.           |
-| `fields`       | `FieldConfig[]`                             | Name + Comment              | The fields to collect. `FieldConfig = { name; label; type?: 'text' \| 'textarea'; rows?; required? }`. Read once at mount.             |
-| `title`        | `string`                                    | `'Your Feedback Matters'`   | Heading above the fields.                                                                                                              |
-| `tossLabel`    | `string`                                    | `'Circular file, in style'` | Label on the toss/submit button.                                                                                                       |
-| `cancelLabel`  | `string`                                    | `'Cancel'`                  | Label on the cancel button.                                                                                                            |
-| `reopenLabel`  | `string`                                    | `'Got feedback?'`           | Label on the closed-landing reopen button.                                                                                             |
-| `blankMessage` | `string`                                    | the built-in scold          | Shown when a blank form is tossed.                                                                                                     |
-| `poweredBy`    | `boolean \| { text; href }`                 | `true`                      | `false` hides the footer badge; an object customizes its text/link.                                                                    |
-| `mode`         | `'full3d' \| 'css' \| 'instant'`            | auto-detected               | Escape hatch to force the render mode. Omit it in production — the mode is derived from the environment (see [Fallbacks](#fallbacks)). |
+| Prop           | Type                                        | Default                     | Description                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onSubmit`     | `(feedback: Record<string,string>) => void` | —                           | Called once with the field values the moment a non-blank toss is accepted. Blank tosses (which shake + scold) never fire it.                                                                                      |
+| `fields`       | `FieldConfig[]`                             | Name + Comment              | The fields to collect. `FieldConfig = { name; label; type?: 'text' \| 'textarea'; rows?; required? }`. Read once at mount.                                                                                        |
+| `title`        | `string`                                    | `'Your Feedback Matters'`   | Heading above the fields.                                                                                                                                                                                         |
+| `tossLabel`    | `string`                                    | `'Circular file, in style'` | Label on the toss/submit button.                                                                                                                                                                                  |
+| `cancelLabel`  | `string`                                    | `'Cancel'`                  | Label on the cancel button.                                                                                                                                                                                       |
+| `reopenLabel`  | `string`                                    | `'Got feedback?'`           | Label on the closed-landing reopen button.                                                                                                                                                                        |
+| `blankMessage` | `string`                                    | the built-in scold          | Shown when a blank form is tossed.                                                                                                                                                                                |
+| `poweredBy`    | `boolean \| { text; href }`                 | `true`                      | `false` hides the footer badge; an object customizes its text/link.                                                                                                                                               |
+| `theme`        | `'light' \| 'dark' \| 'auto'`               | `'auto'`                    | Color theme for the paper form + badge. `'auto'` follows `prefers-color-scheme`; `'dark'`/`'light'` force it — use `'dark'` on a site that's always dark regardless of the visitor's OS. See [Theming](#theming). |
+| `mode`         | `'full3d' \| 'css' \| 'instant'`            | auto-detected               | Escape hatch to force the render mode. Omit it in production — the mode is derived from the environment (see [Fallbacks](#fallbacks)).                                                                            |
 
 ### Advanced exports
 
-For consumers who want to compose the pieces themselves, the lower-level `CrumpleScene` (`CrumpleSceneProps`) and `FeedbackForm` (`FeedbackFormProps`) are exported from the package root too, alongside the `FieldConfig`, `FieldType`, `FormFields`, `AnimationMode`, and `PoweredBy` types.
+For consumers who want to compose the pieces themselves, the lower-level `CrumpleScene` (`CrumpleSceneProps`) and `FeedbackForm` (`FeedbackFormProps`) are exported from the package root too, alongside the `FieldConfig`, `FieldType`, `FormFields`, `AnimationMode`, `PoweredBy`, and `WidgetTheme` types.
 
 ## Layout contract
 
@@ -122,6 +123,35 @@ import 'your-feedback-matters/style.css';
 ```
 
 There are no path-based assets to resolve — the crumpled-paper texture is generated at runtime from a DOM snapshot (`html-to-image`), so there are no images/fonts/GLTFs to bundle.
+
+### Theming
+
+The widget ships a light "paper" look and a matching dark palette. Pick one with the `theme` prop:
+
+```tsx
+<YourFeedbackMatters theme="dark" />   {/* force dark */}
+<YourFeedbackMatters theme="light" />  {/* force light */}
+<YourFeedbackMatters theme="auto" />   {/* default: follow the OS */}
+```
+
+`'auto'` follows the visitor's `prefers-color-scheme` **in pure CSS** — the dark palette applies before hydration with no flash. Reach for `'dark'` (or `'light'`) when your site forces a theme regardless of the visitor's OS setting (e.g. an always-dark blog).
+
+Both themes are built from a small set of CSS custom properties, so you can also craft your own palette without forking. Set any of these on the overlay (its class is `.page`), and only the ones you override change:
+
+```css
+.page {
+  --yfm-paper: #101418; /* form background */
+  --yfm-ink: #e8eaed; /* text + input/label ink */
+  --yfm-accent: #58a6ff; /* filled "toss" button */
+  --yfm-accent-ink: #0d1117; /* text on the toss button */
+  --yfm-field-bg: #0d1117; /* input/textarea background */
+  /* …also: --yfm-border, --yfm-shadow, --yfm-field-border, --yfm-danger,
+     --yfm-btn-bg, --yfm-btn-border, --yfm-btn-bg-hover,
+     --yfm-btn-border-hover, --yfm-accent-hover, and the --yfm-badge-* set. */
+}
+```
+
+Each variable has its light value baked in as a `var()` fallback, so partial overrides are safe. Setting `theme="dark"` just assigns the built-in dark values to these same variables.
 
 ## SSR / Next.js
 
