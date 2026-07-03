@@ -10,6 +10,10 @@
 .feedback-form {
   width: min(26rem, 90vw);
   background: #fdfdf8;
+  /* Own the ink color so a host that themes `color` (e.g. a dark theme setting
+     `body { color: … }`) can't cascade unreadable near-white text into this
+     light paper card — heading and labels included. */
+  color: #23262b;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
@@ -27,6 +31,10 @@
 .feedback-form input,
 .feedback-form textarea {
   font: inherit;
+  /* Explicit control colors: typed feedback must stay visible even when the
+     host themes text color or resets form-control backgrounds. */
+  color: #23262b;
+  background: #ffffff;
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 3px;
@@ -39,6 +47,45 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+.feedback-form .actions button {
+  /* Explicit chrome instead of the browser's default button styling — a host
+     reset (e.g. Tailwind's preflight) strips that, leaving the toss/cancel
+     buttons as plain text. Scoped under `.feedback-form` for enough
+     specificity to win over such resets. */
+  font: inherit;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #cfcfc4;
+  border-radius: 4px;
+  background: #f0f0e6;
+  color: #23262b;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.05s ease;
+}
+.feedback-form .actions button:hover {
+  background: #e7e7db;
+  border-color: #b9b9a8;
+}
+.feedback-form .actions button:active {
+  transform: translateY(1px);
+}
+.feedback-form .actions button:focus-visible {
+  outline: 2px solid #23262b;
+  outline-offset: 2px;
+}
+/* The toss button is the primary action — filled dark ink on the paper. */
+.feedback-form .actions button.toss {
+  background: #23262b;
+  border-color: #23262b;
+  color: #fdfdf8;
+}
+.feedback-form .actions button.toss:hover {
+  background: #34383f;
+  border-color: #34383f;
 }
 .shake {
   animation: shake 0.5s ease-in-out;
