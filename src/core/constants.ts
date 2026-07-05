@@ -4,11 +4,13 @@ export const CRUMPLE_DURATION_S = 1.1;
 export const MESH_SEGMENTS = 64;
 
 // Fishing a piled wad back out to inspect it. INSPECT_CRUMPLE_T is the crumple
-// parameter the note un-crumples *to* — ~95% flat (t = 0.05), left slightly
-// creased so it still reads as a fished-out piece of paper rather than a pristine
-// sheet. INSPECT_DURATION_S is how long the un-crumple fly-up (and the mirrored
-// re-crumple on dismiss) takes; tuned for feel in the polish phase.
-export const INSPECT_CRUMPLE_T = 0.05;
+// parameter the note un-crumples *to* — ~85% flat (t = 0.15), left visibly
+// creased so it reads as a once-crumpled piece of paper smoothed back out rather
+// than a pristine sheet. The residual crease is (1 - INSPECT_CRUMPLE_T): raise
+// this toward ~0.2 for more wrinkle (text starts to distort past that), drop it
+// toward 0.05 for a flatter, cleaner note. INSPECT_DURATION_S is how long the
+// un-crumple fly-up (and the mirrored re-crumple on dismiss) takes.
+export const INSPECT_CRUMPLE_T = 0.15;
 export const INSPECT_DURATION_S = 0.9;
 
 // Draw order for the inspect lightbox. The scrim (a translucent dark quad) is

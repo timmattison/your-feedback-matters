@@ -6,7 +6,7 @@ function progressSamples(n = 20): number[] {
   return Array.from({ length: n + 1 }, (_, i) => i / n);
 }
 
-test('openingT: un-crumples from a full wad (t=1) to ~95% flat (INSPECT_CRUMPLE_T)', () => {
+test('openingT: un-crumples from a full wad (t=1) to ~85% flat (INSPECT_CRUMPLE_T)', () => {
   expect(openingT(0)).toBe(1);
   expect(openingT(1)).toBe(INSPECT_CRUMPLE_T);
 });
@@ -26,7 +26,7 @@ test('openingT stays within [INSPECT_CRUMPLE_T, 1] across the sample', () => {
   }
 });
 
-test('closingT: re-crumples from ~95% flat (INSPECT_CRUMPLE_T) back to a full wad (t=1)', () => {
+test('closingT: re-crumples from ~85% flat (INSPECT_CRUMPLE_T) back to a full wad (t=1)', () => {
   expect(closingT(0)).toBe(INSPECT_CRUMPLE_T);
   expect(closingT(1)).toBe(1);
 });
