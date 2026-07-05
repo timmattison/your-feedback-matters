@@ -2,6 +2,8 @@
 
 NOTE: This project was created with AI because I had a funny idea and just wanted to get it done. If you don't like that you can use this component to report your feelings.
 
+**▶ [Try it live](https://timmattison.github.io/your-feedback-matters/)** — submit your feedback in style
+
 An optimized website feedback system that is possibly GDPR capable.
 
 People "submit" their feedback. That feedback is "stored" where it can only be reviewed in the same browser that submitted it. No servers, no databases, no complaints. (Or wire up `onSubmit` and send it wherever you like — the widget stays storage-agnostic.)
