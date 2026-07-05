@@ -205,7 +205,7 @@ settling → closed`, see `src/core/feedback-machine.ts`). The widget lands in
    resting wad's world pose is projected to a screen rect (`worldPointToScreen`
    in `src/core/screen-to-world.ts`) and the click is matched against those
    rects (`pickBallAt`, `src/core/pick-ball.ts`); the R3F canvas never
-   raycasts. The picked note then un-crumples to ~85% flat and flies up to the
+   raycasts. The picked note then un-crumples to ~75% flat and flies up to the
    form's old screen spot behind a dimmed scrim, replaying the crumple's own
    eased field backward (`openingT`/`closingT` in `src/core/inspect-crumple.ts`,
    driven each frame by `src/scene/inspected-note.tsx` — a script-driven plane,
